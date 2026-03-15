@@ -1,0 +1,12 @@
+node_modules/
+.env
+uploads/*
+!uploads/.gitkeep
+backups/*
+!backups/.gitkeep
+public/plugins/
+*.log
+.tmp-updates/
+.restart.bat
+.restart.sh
+update-history.json
