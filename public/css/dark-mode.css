@@ -1,0 +1,86 @@
+/* ============================================
+   Dark Mode
+   ============================================ */
+
+[data-theme="dark"] {
+  --color-primary: #818CF8;
+  --color-primary-hover: #6366F1;
+  --color-primary-light: rgba(99, 102, 241, 0.15);
+  --color-primary-subtle: rgba(99, 102, 241, 0.25);
+
+  --color-bg: #111827;
+  --color-bg-secondary: #0F172A;
+  --color-bg-tertiary: #1E293B;
+  --color-surface: #1F2937;
+  --color-surface-hover: #283548;
+
+  --color-text: #F9FAFB;
+  --color-text-secondary: #9CA3AF;
+  --color-text-tertiary: #6B7280;
+  --color-text-inverse: #111827;
+
+  --color-border: #374151;
+  --color-border-light: #1F2937;
+
+  --color-success: #34D399;
+  --color-success-bg: rgba(16, 185, 129, 0.15);
+  --color-warning: #FBBF24;
+  --color-warning-bg: rgba(217, 119, 6, 0.15);
+  --color-error: #F87171;
+  --color-error-bg: rgba(220, 38, 38, 0.15);
+  --color-info: #60A5FA;
+  --color-info-bg: rgba(37, 99, 235, 0.15);
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.4);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.5);
+}
+
+[data-theme="dark"] .badge-open { background: rgba(59,130,246,0.2); color: #93C5FD; }
+[data-theme="dark"] .badge-pending { background: rgba(245,158,11,0.2); color: #FCD34D; }
+[data-theme="dark"] .badge-in_progress,
+[data-theme="dark"] .badge-in-progress { background: rgba(139,92,246,0.2); color: #C4B5FD; }
+[data-theme="dark"] .badge-resolved { background: rgba(16,185,129,0.2); color: #6EE7B7; }
+[data-theme="dark"] .badge-closed { background: rgba(107,114,128,0.2); color: #D1D5DB; }
+
+[data-theme="dark"] .badge-critical { background: rgba(220,38,38,0.2); color: #FCA5A5; }
+[data-theme="dark"] .badge-high { background: rgba(234,88,12,0.2); color: #FDBA74; }
+[data-theme="dark"] .badge-medium { background: rgba(217,119,6,0.2); color: #FCD34D; }
+[data-theme="dark"] .badge-low { background: rgba(107,114,128,0.2); color: #D1D5DB; }
+
+[data-theme="dark"] .badge-active { background: rgba(16,185,129,0.2); color: #6EE7B7; }
+[data-theme="dark"] .badge-inactive { background: rgba(107,114,128,0.2); color: #D1D5DB; }
+[data-theme="dark"] .badge-admin { background: rgba(139,92,246,0.2); color: #C4B5FD; }
+[data-theme="dark"] .badge-agent { background: rgba(59,130,246,0.2); color: #93C5FD; }
+[data-theme="dark"] .badge-user { background: rgba(107,114,128,0.2); color: #D1D5DB; }
+
+[data-theme="dark"] .form-control {
+  background-color: var(--color-bg);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] select.form-control {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  border-color: var(--color-border);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%239CA3AF' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 10px 6px;
+}
+
+[data-theme="dark"] select.form-control option {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .login-card {
+  background: var(--color-surface);
+}
+
+[data-theme="dark"] .skeleton {
+  background: linear-gradient(90deg, var(--color-bg-tertiary) 25%, #2D3748 50%, var(--color-bg-tertiary) 75%);
+  background-size: 200% 100%;
+}

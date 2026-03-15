@@ -1,0 +1,101 @@
+/* ============================================
+   Ticket Analytics Plugin — Styles
+   ============================================ */
+
+/* Bar chart rows */
+.analytics-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.analytics-bar-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  min-width: 100px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.analytics-bar-track {
+  height: 20px;
+  background: var(--color-bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.analytics-bar-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+  min-width: 2px;
+}
+
+.analytics-bar-value {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+/* Volume chart */
+.analytics-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  min-height: 160px;
+  padding-top: 20px;
+}
+
+.analytics-chart-col {
+  flex: 1;
+  min-width: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.analytics-chart-bars {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 120px;
+}
+
+.analytics-chart-bar {
+  width: 8px;
+  border-radius: 2px 2px 0 0;
+  transition: height 0.3s ease;
+  min-height: 2px;
+}
+
+.analytics-chart-label {
+  font-size: 9px;
+  color: var(--color-text-tertiary);
+  margin-top: 4px;
+  transform: rotate(-45deg);
+  white-space: nowrap;
+}
+
+/* Donut wrapper */
+.analytics-donut-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .analytics-chart-bar {
+    width: 4px;
+  }
+  .analytics-chart-label {
+    font-size: 7px;
+  }
+  .analytics-bar-label {
+    min-width: 60px;
+    font-size: var(--font-size-xs);
+  }
+}

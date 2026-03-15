@@ -1,0 +1,267 @@
+/* ============================================
+   Orders — Stepper
+   ============================================ */
+.stepper {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.step {
+  flex: 1;
+  text-align: center;
+  position: relative;
+  min-width: 100px;
+}
+
+.step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--color-border);
+  z-index: 0;
+}
+
+.step-done:not(:last-child)::after {
+  background: var(--color-success);
+}
+
+.step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+  border: 2px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-tertiary);
+}
+
+.step-done .step-circle {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: white;
+}
+
+.step-active .step-circle {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+  box-shadow: 0 0 0 4px var(--color-primary-light);
+}
+
+.step-label {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.step-active .step-label {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.step-done .step-label {
+  color: var(--color-success);
+}
+
+.step-date {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+}
+
+/* ============================================
+   Network Monitor
+   ============================================ */
+.network-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.network-group-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  margin-bottom: 12px;
+}
+
+.network-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.network-group-title {
+  grid-column: 1 / -1;
+}
+
+.network-device-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  transition: box-shadow var(--transition);
+}
+
+.network-device-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* Availability Timeline (statuspage-style) */
+.availability-timeline {
+  display: flex;
+  gap: 2px;
+  height: 32px;
+}
+
+.timeline-block {
+  flex: 1;
+  border-radius: 2px;
+  min-width: 4px;
+}
+
+.timeline-up { background: var(--color-success); }
+.timeline-down { background: var(--color-error); }
+.timeline-none { background: var(--color-bg-tertiary); }
+
+/* ============================================
+   Knowledge Base
+   ============================================ */
+.kb-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .kb-layout { grid-template-columns: 1fr; }
+  .kb-sidebar-cats { display: flex; overflow-x: auto; gap: 4px; }
+  .kb-sidebar-cats .nav-item { white-space: nowrap; }
+}
+
+.kb-sidebar-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kb-articles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kb-article-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  transition: box-shadow var(--transition);
+}
+
+.kb-article-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.kb-article-title {
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  margin-bottom: 6px;
+}
+
+.kb-article-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-xs);
+  flex-wrap: wrap;
+}
+
+.kb-content {
+  line-height: 1.8;
+  font-size: var(--font-size-base);
+}
+
+.kb-content h1, .kb-content h2, .kb-content h3 {
+  margin: 24px 0 12px;
+}
+
+.kb-content p {
+  margin-bottom: 12px;
+}
+
+.kb-content code {
+  background: var(--color-bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.kb-content pre {
+  background: var(--color-bg-tertiary);
+  padding: 16px;
+  border-radius: var(--border-radius);
+  overflow-x: auto;
+  margin: 12px 0;
+}
+
+/* ============================================
+   Self-Service Portal
+   ============================================ */
+.selfservice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.selfservice-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: 24px;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-align: center;
+}
+
+.selfservice-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary);
+}
+
+.selfservice-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.selfservice-title {
+  font-weight: 600;
+  font-size: var(--font-size-lg);
+  margin-bottom: 4px;
+}
+
+.selfservice-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.order-item-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}

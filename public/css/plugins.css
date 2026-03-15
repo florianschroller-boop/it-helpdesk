@@ -1,0 +1,59 @@
+/* Plugin Manager */
+.plugin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.plugin-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: 20px;
+  transition: box-shadow var(--transition);
+}
+
+.plugin-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.plugin-card.plugin-inactive {
+  opacity: 0.6;
+}
+
+.plugin-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.plugin-card-name {
+  font-weight: 600;
+  font-size: var(--font-size-lg);
+}
+
+.plugin-card-version {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.plugin-card-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.plugin-card-author {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin-bottom: 12px;
+}
+
+.plugin-card-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-light);
+}

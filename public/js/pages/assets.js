@@ -1,0 +1,2 @@
+// Assets removed from core — available as plugin 'asset-management'
+const AssetPages = { listPage(c) { c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">\u2B22</div><div class="empty-state-title">Plugin erforderlich</div><p class="text-muted">Die Asset-Verwaltung ist als Plugin verf\u00FCgbar. Bitte "asset-management" Plugin installieren.</p><button class="btn btn-primary mt-4" onclick="Router.navigate(\'/plugins\')">Zum Plugin-Manager</button></div>'; }, detailPage(c) { this.listPage(c); } };

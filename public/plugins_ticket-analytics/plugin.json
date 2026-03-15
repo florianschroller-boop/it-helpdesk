@@ -1,0 +1,9 @@
+{
+  "id": "ticket-analytics",
+  "name": "Ticket-Auswertung & Reporting",
+  "version": "1.0.0",
+  "description": "Umfassende Auswertungen und Reports für das Ticket-System: KPIs, SLA-Compliance, Agent-Performance, Trendanalysen, Kategorie-Verteilung und exportierbare Berichte.",
+  "author": "IT-Helpdesk",
+  "entryPoint": "index.js",
+  "minVersion": "1.0.0"
+}

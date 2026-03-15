@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>IT-Helpdesk v2.0 — Installationsanleitung</title>
+<style>
+  @media print { body{font-size:11pt} .no-print{display:none} @page{margin:2cm} }
+  *{box-sizing:border-box;margin:0;padding:0} body{font-family:'Segoe UI',-apple-system,sans-serif;color:#1a1a1a;line-height:1.7;max-width:800px;margin:0 auto;padding:40px 20px}
+  h1{font-size:28px;margin-bottom:8px;color:#4F46E5} h2{font-size:20px;margin-top:36px;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid #4F46E5} h3{font-size:16px;margin-top:20px;margin-bottom:8px}
+  p{margin-bottom:12px} code{background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:0.9em} pre{background:#f3f4f6;padding:16px;border-radius:8px;overflow-x:auto;margin:12px 0;font-size:13px;line-height:1.5}
+  .box{background:#EEF2FF;border-left:4px solid #4F46E5;padding:16px;border-radius:0 8px 8px 0;margin:16px 0} .box-warn{background:#FFFBEB;border-left-color:#D97706} .box-success{background:#ECFDF5;border-left-color:#059669}
+  .step{counter-increment:step;margin-bottom:16px;padding-left:40px;position:relative} .step::before{content:counter(step);position:absolute;left:0;top:0;width:28px;height:28px;background:#4F46E5;color:white;border-radius:50%;text-align:center;line-height:28px;font-weight:bold;font-size:14px}
+  table{width:100%;border-collapse:collapse;margin:12px 0} th,td{text-align:left;padding:8px 12px;border:1px solid #e5e7eb;font-size:14px} th{background:#f3f4f6;font-weight:600}
+  .subtitle{color:#6b7280;font-size:16px;margin-bottom:24px} .toc{background:#f9fafb;padding:20px;border-radius:8px;margin:20px 0} .toc a{text-decoration:none;color:#4F46E5;display:block;padding:4px 0}
+  .print-btn{position:fixed;bottom:20px;right:20px;background:#4F46E5;color:white;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+  .footer{margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;text-align:center}
+  .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600} .badge-core{background:#DBEAFE;color:#1D4ED8} .badge-plugin{background:#FEF3C7;color:#92400E}
+</style>
+</head>
+<body>
+<button class="print-btn no-print" onclick="window.print()">Als PDF speichern / Drucken</button>
+
+<h1>IT-Helpdesk v2.0</h1>
+<p class="subtitle">Installationsanleitung — Modulare Version mit Plugin-System</p>
+
+<div class="toc">
+  <strong>Inhalt</strong>
+  <a href="#architektur">1. Systemarchitektur</a>
+  <a href="#voraussetzungen">2. Voraussetzungen</a>
+  <a href="#windows">3. Installation unter Windows</a>
+  <a href="#linux">4. Installation unter Linux</a>
+  <a href="#plugins">5. Plugins installieren</a>
+  <a href="#konfiguration">6. Erste Konfiguration</a>
+  <a href="#troubleshooting">7. Problembehandlung</a>
+</div>
+
+<h2 id="architektur">1. Systemarchitektur</h2>
+<p>Das IT-Helpdesk besteht aus einem <strong>schlanken Kern</strong> und <strong>optionalen Plugins</strong>:</p>
+
+<h3>Kern-Funktionen <span class="badge badge-core">Core</span></h3>
+<table>
+  <tr><th>Modul</th><th>Beschreibung</th></tr>
+  <tr><td>Ticket-System</td><td>Erstellen, Bearbeiten, Kanban-Board, SLA-Tracking, Kommentare</td></tr>
+  <tr><td>Benutzerverwaltung</td><td>Rollen (Admin/Agent/User), Registrierung, Einladungsschlüssel</td></tr>
+  <tr><td>Knowledge Base</td><td>Artikel mit Kategorien, Volltextsuche, Voting</td></tr>
+  <tr><td>Standorte</td><td>Standort-Profile mit Ansprechpartner und Anfahrt</td></tr>
+  <tr><td>Bestellungen</td><td>Bestell-Workflow mit 7-Schritt-Fortschrittsanzeige</td></tr>
+  <tr><td>Antwortvorlagen</td><td>Vordefinierte Antworten mit Auto-Vorschlag</td></tr>
+  <tr><td>White-Label</td><td>Firmenname, Logos, Farben, Du/Sie-Anrede</td></tr>
+  <tr><td>Plugin-System</td><td>Plugins installieren, aktivieren, Sichtbarkeit steuern</td></tr>
+</table>
+
+<h3>Verfügbare Plugins <span class="badge badge-plugin">Plugin</span></h3>
+<table>
+  <tr><th>Plugin</th><th>Datei</th><th>Beschreibung</th></tr>
+  <tr><td><strong>Asset-Verwaltung</strong></td><td>asset-management.zip</td><td>Hardware-Assets, IT-Lager mit Mindestbeständen, Lieferanten, CSV-Import/Export</td></tr>
+  <tr><td><strong>Netzwerk-Monitor</strong></td><td>network-monitor.zip</td><td>Geräte-Überwachung, Ping/HTTP-Checks, Status-Dashboard, Alerting</td></tr>
+  <tr><td><strong>Onboarding & Offboarding</strong></td><td>onboarding-offboarding.zip</td><td>Mitarbeiter-Anträge, Action-Plan, Hardware-Bestellung, Austritts-Checkliste</td></tr>
+  <tr><td><strong>Ticket-Auswertung</strong></td><td>ticket-analytics.zip</td><td>KPIs, SLA-Compliance, Agent-Performance, Trend-Charts, CSV-Export</td></tr>
+  <tr><td><strong>Systemwartung</strong></td><td>system-maintenance.zip</td><td>Updates einspielen, DB-Wartung, Backups, Wartungsmodus</td></tr>
+  <tr><td><strong>Admin-Wiki</strong></td><td>admin-wiki.zip</td><td>Internes Wiki mit Namespaces, Markdown, Versionierung</td></tr>
+</table>
+
+<h2 id="voraussetzungen">2. Voraussetzungen</h2>
+<table>
+  <tr><th>Komponente</th><th>Minimum</th><th>Empfohlen</th></tr>
+  <tr><td>Node.js</td><td>18.x</td><td>20.x LTS</td></tr>
+  <tr><td>MySQL / MariaDB</td><td>5.7 / 10.3</td><td>8.x / 10.11</td></tr>
+  <tr><td>RAM</td><td>512 MB</td><td>1 GB+</td></tr>
+  <tr><td>Speicher</td><td>200 MB</td><td>1 GB+</td></tr>
+  <tr><td>OS</td><td colspan="2">Windows 10/11, Server 2019+, CentOS 7+, Ubuntu 20+, Debian 11+</td></tr>
+</table>
+
+<h2 id="windows">3. Installation unter Windows</h2>
+<h3>3.1 Node.js</h3>
+<div style="counter-reset:step">
+  <div class="step"><p><a href="https://nodejs.org/de/download">https://nodejs.org/de/download</a> öffnen</p></div>
+  <div class="step"><p><strong>LTS-Version</strong> als .msi herunterladen und installieren</p></div>
+  <div class="step"><p>Neues Terminal öffnen, prüfen: <code>node --version</code></p></div>
+</div>
+
+<h3>3.2 MySQL</h3>
+<table>
+  <tr><th>Option</th><th>Für</th><th>Download</th></tr>
+  <tr><td>XAMPP</td><td>Einfachste Option</td><td><a href="https://www.apachefriends.org/de/">apachefriends.org</a></td></tr>
+  <tr><td>MySQL Community</td><td>Produktion</td><td><a href="https://dev.mysql.com/downloads/installer/">dev.mysql.com</a></td></tr>
+  <tr><td>MariaDB</td><td>Produktion</td><td><a href="https://mariadb.org/download/">mariadb.org</a></td></tr>
+</table>
+
+<h3>3.3 Helpdesk installieren</h3>
+<div style="counter-reset:step">
+  <div class="step"><p>ZIP entpacken nach z.B. <code>C:\IT-Helpdesk</code></p></div>
+  <div class="step"><p>Eingabeaufforderung öffnen: <code>cd C:\IT-Helpdesk</code></p></div>
+  <div class="step"><p>Installer starten: <code>node install.js</code></p></div>
+  <div class="step"><p>Den 6 Schritten folgen (Datenbank, Admin, Demodaten)</p></div>
+  <div class="step"><p><code>START.bat</code> doppelklicken</p></div>
+  <div class="step"><p>Browser: <code>http://localhost:3000</code></p></div>
+</div>
+
+<h2 id="linux">4. Installation unter Linux</h2>
+<h3>Node.js + MySQL installieren</h3>
+<p><strong>Ubuntu/Debian:</strong></p>
+<pre>curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs mysql-server
+sudo systemctl start mysql</pre>
+<p><strong>CentOS/RHEL:</strong></p>
+<pre>curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+sudo yum install -y nodejs mariadb-server
+sudo systemctl start mariadb</pre>
+
+<h3>Helpdesk installieren</h3>
+<pre>unzip IT-Helpdesk-v2.0.zip && cd IT-Helpdesk
+node install.js
+./start.sh</pre>
+
+<h3>Als systemd-Dienst (optional)</h3>
+<pre>sudo tee /etc/systemd/system/helpdesk.service &lt;&lt;EOF
+[Unit]
+Description=IT-Helpdesk
+After=network.target mysql.service
+[Service]
+Type=simple
+WorkingDirectory=/opt/IT-Helpdesk
+ExecStart=/usr/bin/node /opt/IT-Helpdesk/api/index.js
+Restart=always
+Environment=NODE_ENV=production
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl enable --now helpdesk</pre>
+
+<h2 id="plugins">5. Plugins installieren</h2>
+<div style="counter-reset:step">
+  <div class="step"><p>Als Admin anmelden</p></div>
+  <div class="step"><p>Administration → <strong>Plugins</strong></p></div>
+  <div class="step"><p>"Plugin installieren" → ZIP-Datei hochladen</p></div>
+  <div class="step"><p>Server neustarten (Admin → Server neustarten)</p></div>
+</div>
+
+<div class="box">
+  <strong>Tipp:</strong> Plugins können auch manuell installiert werden: ZIP entpacken nach <code>plugins/&lt;name&gt;/</code>, dann Server neustarten.
+</div>
+
+<div class="box box-warn">
+  <strong>Sichtbarkeit:</strong> Im Plugin-Manager können Admins festlegen, welche Plugins für Endbenutzer oder Agents sichtbar sind (Sidebar-Einträge). Die Plugin-Funktionen bleiben über direkte URLs erreichbar.
+</div>
+
+<h2 id="konfiguration">6. Erste Konfiguration</h2>
+<table>
+  <tr><th>Was</th><th>Wo</th></tr>
+  <tr><td>Firmenname, Logo, Farben</td><td>Administration → White-Label</td></tr>
+  <tr><td>E-Mail (SMTP/IMAP)</td><td>Einstellungen → E-Mail</td></tr>
+  <tr><td>Abteilungen, Positionen</td><td>Einstellungen → Organisation</td></tr>
+  <tr><td>Ticket-Kategorien</td><td>Einstellungen → Tickets</td></tr>
+  <tr><td>Einladungsschlüssel</td><td>Administration → Einladungsschlüssel</td></tr>
+  <tr><td>Standorte anlegen</td><td>Verwaltung → Standorte</td></tr>
+  <tr><td>Plugins installieren</td><td>Administration → Plugins</td></tr>
+  <tr><td>Microsoft-Login</td><td>Einstellungen → Microsoft OAuth</td></tr>
+</table>
+
+<h2 id="troubleshooting">7. Problembehandlung</h2>
+
+<div class="box box-warn">
+  <strong>"Cannot connect to database"</strong><br>
+  MySQL läuft nicht oder Zugangsdaten in <code>.env</code> falsch. Bei XAMPP: MySQL-Modul starten.
+</div>
+
+<div class="box box-warn">
+  <strong>"EADDRINUSE"</strong><br>
+  Port belegt. In <code>.env</code> den <code>APP_PORT</code> ändern, oder den anderen Prozess beenden.
+</div>
+
+<div class="box box-warn">
+  <strong>Plugin erscheint nicht</strong><br>
+  Server neustarten. Plugins werden beim Start geladen und Frontend-Assets synchronisiert.
+</div>
+
+<div class="box box-success">
+  <strong>Server neustarten</strong><br>
+  Im Browser: Administration → Server neustarten. Oder: Terminal schließen, <code>START.bat</code> erneut starten.
+</div>
+
+<div class="footer">IT-Helpdesk v2.0 — Modulare Version mit Plugin-System — Installationsanleitung</div>
+</body>
+</html>

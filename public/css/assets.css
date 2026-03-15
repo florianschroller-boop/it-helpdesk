@@ -1,0 +1,60 @@
+/* ============================================
+   Asset & Detail styles
+   ============================================ */
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.detail-grid .detail-field {
+  margin-bottom: 0;
+}
+
+.text-warning {
+  color: var(--color-warning) !important;
+}
+
+/* Type distribution bar chart */
+.type-bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.type-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--font-size-sm);
+}
+
+.type-bar-label {
+  width: 100px;
+  text-align: right;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.type-bar-track {
+  flex: 1;
+  height: 24px;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+}
+
+.type-bar-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: var(--border-radius-sm);
+  transition: width var(--transition-slow);
+  min-width: 2px;
+}
+
+.type-bar-count {
+  width: 30px;
+  font-weight: 600;
+  color: var(--color-text);
+}
