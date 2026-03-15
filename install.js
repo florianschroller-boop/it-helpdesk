@@ -85,45 +85,27 @@ async function main() {
   await pause(); hr();
 
   // SCHRITT 5
-  console.log('\n  SCHRITT 5/6: Administrator\n');
-  const bcrypt = require(path.join(ROOT,'node_modules','bcryptjs'));
-  const [adm] = await conn.query("SELECT id FROM users WHERE role='admin' LIMIT 1");
-  let aEmail, aPass;
-  if (adm.length===0) {
-    const aName = await ask('Admin-Name','Administrator');
-    aEmail = await ask('Admin-E-Mail','admin@helpdesk.local');
-    aPass = await ask('Admin-Passwort','admin123');
-    await conn.query('INSERT INTO users (name,email,password_hash,role) VALUES (?,?,?,?)',[aName,aEmail,await bcrypt.hash(aPass,12),'admin']);
-    console.log('  \u2713 Admin erstellt');
-  } else console.log('  \u2713 Admin vorhanden');
+  console.log('\n  SCHRITT 5/6: Server-Konfiguration\n');
 
-  const defs = {'wl_company_name':'IT-Helpdesk','wl_formality':'sie','wl_registration_enabled':'true','wl_primary_color':'#4F46E5',
-    'departments':JSON.stringify(['IT','Vertrieb','Marketing','Buchhaltung','Personal']),
-    'ticket_categories':JSON.stringify(['Hardware','Software','Netzwerk','Zugang/Passwort','Bestellung','Sonstiges'])};
-  for (const [k,v] of Object.entries(defs)) await conn.query('INSERT INTO settings (key_name,value) VALUES (?,?) ON DUPLICATE KEY UPDATE key_name=key_name',[k,v]);
-  for (const c of [['Hardware','hardware',1],['Software','software',2],['Netzwerk','netzwerk',3],['Anleitungen','anleitungen',4]])
-    await conn.query('INSERT IGNORE INTO kb_categories (name,slug,sort_order) VALUES (?,?,?)',c);
-  const ik = crypto.randomBytes(4).toString('hex').toUpperCase();
-  await conn.query('INSERT IGNORE INTO invite_keys (key_code,label,created_by) VALUES (?,?,1)',[ik,'Standard']);
-  await conn.query("INSERT INTO settings (key_name,value) VALUES ('mailhook_api_key',?) ON DUPLICATE KEY UPDATE key_name=key_name",[crypto.randomBytes(32).toString('hex')]);
-  console.log('  \u2713 Einladungsschluessel: ' + ik);
-
-  const demo = await ask('\n  Demodaten? (j/n)','j');
-  if (demo.toLowerCase()==='j') {
-    const h = await bcrypt.hash('demo123',12); const y = new Date().getFullYear();
-    for (const u of [['Max Mustermann','max@demo.local',h,'agent','IT'],['Hans Schmidt','hans@demo.local',h,'user','Vertrieb'],['Anna Weber','anna@demo.local',h,'user','Buchhaltung']])
-      await conn.query('INSERT IGNORE INTO users (name,email,password_hash,role,department) VALUES (?,?,?,?,?)',u);
-    await conn.query('INSERT IGNORE INTO ticket_counters (year,last_number) VALUES (?,0)',[y]);
-    for (const [title,cat,prio] of [['Laptop defekt','Hardware','high'],['Outlook-Problem','Software','medium'],['Passwort-Reset','Zugang/Passwort','medium']]) {
-      await conn.query('UPDATE ticket_counters SET last_number=last_number+1 WHERE year=?',[y]);
-      const [c] = await conn.query('SELECT last_number FROM ticket_counters WHERE year=?',[y]);
-      await conn.query("INSERT IGNORE INTO tickets (ticket_number,title,category,priority,status,requester_id,source,sla_due_at) VALUES (?,'open',?,?,'web',DATE_ADD(NOW(),INTERVAL 24 HOUR))",
-        [`#IT-${y}-${String(c[0].last_number).padStart(4,'0')}`,title,cat,prio,1]);
+  // Detect server IP addresses
+  const os = require('os');
+  const nets = os.networkInterfaces();
+  const ips = [];
+  for (const iface of Object.values(nets)) {
+    for (const cfg of iface) {
+      if (cfg.family === 'IPv4' && !cfg.internal) ips.push(cfg.address);
     }
-    console.log('  \u2713 Demo: 3 User, 3 Tickets (max@demo.local / demo123)');
   }
 
-  const port = await ask('Port','3000'), url = await ask('URL',`http://localhost:${port}`);
+  if (ips.length > 0) {
+    console.log('  Erkannte IP-Adresse(n) dieses Servers:');
+    ips.forEach(ip => console.log('    \u2192 ' + ip));
+    console.log('');
+  }
+
+  const port = await ask('Server-Port','3000');
+  const defaultUrl = ips.length > 0 ? `http://${ips[0]}:${port}` : `http://localhost:${port}`;
+  const url = await ask('URL', defaultUrl);
   fs.writeFileSync(path.join(ROOT,'.env'),`DB_HOST=${dbHost}\nDB_PORT=${dbPort}\nDB_NAME=${dbName}\nDB_USER=${dbUser}\nDB_PASSWORD=${dbPass}\nAPP_URL=${url}\nAPP_PORT=${port}\nAPP_SECRET_KEY=${crypto.randomBytes(32).toString('hex')}\nMAIL_SMTP_HOST=\nMAIL_SMTP_PORT=587\nMAIL_SMTP_USER=\nMAIL_SMTP_PASS=\nMAIL_FROM_ADDRESS=helpdesk@localhost\nMAIL_FROM_NAME=IT-Helpdesk\nMAIL_IMAP_HOST=\nMAIL_IMAP_PORT=993\nMAIL_IMAP_USER=\nMAIL_IMAP_PASS=\nPING_INTERVAL_MINUTES=5\nMAIL_POLL_INTERVAL_MINUTES=2\nUPLOAD_MAX_SIZE_MB=20\nUPLOAD_PATH=./uploads\nNETWORK_CHECK_METHOD=http\nMS_OAUTH_ENABLED=false\nMS_OAUTH_CLIENT_ID=\nMS_OAUTH_CLIENT_SECRET=\nMS_OAUTH_TENANT_ID=common\nMS_OAUTH_REDIRECT_URI=${url}/api/auth/microsoft/callback\n`);
   for (const d of ['uploads','backups']) { const p=path.join(ROOT,d); if(!fs.existsSync(p)) fs.mkdirSync(p,{recursive:true}); }
   await conn.end();
@@ -137,20 +119,19 @@ async function main() {
 
   console.log(`
   ${'═'.repeat(46)}
-  Installation erfolgreich!
+  Datenbank bereit — Server kann gestartet werden!
   ${'═'.repeat(46)}
 
-  Starten:  ${isWin?'START.bat':'./start.sh'}
-  Browser:  ${url}
-  Plugins:  ${pc} vorinstalliert
+  Server starten:  ${isWin ? 'START.bat doppelklicken' : './start.sh'}
 
-  Weitere Plugins: Admin \u2192 Plugin-Manager
-    - asset-management.zip      (Assets, Lager, Lieferanten)
-    - network-monitor.zip       (Netzwerk-\u00DCberwachung)
-    - onboarding-offboarding.zip (Mitarbeiter-Lebenszyklus)
-    - ticket-analytics.zip      (Auswertungen & Reports)
-    - system-maintenance.zip    (Updates & Backups)
-    - admin-wiki.zip            (IT-Dokumentation)
+  Dann im Browser oeffnen:
+
+    \u2192  ${url}
+
+  ${ips.length > 0 ? 'Von anderen Geraeten im Netzwerk:\n' + ips.map(ip => '    \u2192  http://' + ip + ':' + port).join('\n') : ''}
+
+  Der Setup-Assistent im Browser fuehrt Sie durch
+  die weitere Einrichtung (Admin, Firma, E-Mail).
 `);
   rl.close();
 }

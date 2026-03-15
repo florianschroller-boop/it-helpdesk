@@ -11,6 +11,13 @@ const App = {
     const theme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', theme);
 
+    // Check if first-run setup is needed
+    const setupRes = await API.get('/setup/status');
+    if (setupRes.success && setupRes.data?.needs_setup) {
+      window.location.href = '/setup.html';
+      return;
+    }
+
     // Load branding (public, no auth)
     const brandRes = await API.get('/auth/branding');
     if (brandRes.success) {
@@ -167,8 +174,18 @@ const App = {
   },
 
   renderApp() {
-    const isAdmin = this.user.role === 'admin';
-    const isAgent = this.user.role === 'agent' || isAdmin;
+    const userRoles = (this.user.role || 'user').split(',').map(r => r.trim());
+    const isAdmin = userRoles.includes('admin');
+    const isAgent = userRoles.includes('agent') || isAdmin;
+    const isDisposition = userRoles.includes('disposition') || isAdmin;
+    const isAssistenz = userRoles.includes('assistenz');
+
+    // Expose for frontend use
+    this.user.roles = userRoles;
+    this.user.isAdmin = isAdmin;
+    this.user.isAgent = isAgent;
+    this.user.isDisposition = isDisposition;
+    this.user.isAssistenz = isAssistenz;
     const initials = this.user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     const theme = document.documentElement.getAttribute('data-theme');
 

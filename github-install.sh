@@ -4,10 +4,10 @@
 # Installiert das System direkt von GitHub
 #
 # Nutzung:
-#   curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/it-helpdesk/main/github-install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/t-helpdesk/main/github-install.sh | bash
 #
 # Oder mit Optionen:
-#   curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/it-helpdesk/main/github-install.sh | bash -s -- --demo --dir /opt/helpdesk
+#   curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/t-helpdesk/main/github-install.sh | bash -s -- --demo --dir /opt/helpdesk
 # ============================================
 
 set -e
@@ -83,7 +83,7 @@ if [ -d "$INSTALL_DIR" ]; then
     echo "  ✓ Aktualisiert"
   fi
 else
-  git clone --depth 1 --branch "$BRANCH" "https://github.com/florianschroller-boop/it-helpdesk.git" "$INSTALL_DIR"
+  git clone --depth 1 --branch "$BRANCH" "https://github.com/florianschroller-boop/t-helpdesk.git" "$INSTALL_DIR"
   echo "  ✓ Geklont nach $INSTALL_DIR"
 fi
 

@@ -210,7 +210,7 @@ const Pages = {
           </div>
         </td>
         <td>${this.esc(u.email)}</td>
-        <td><span class="badge badge-${u.role}">${u.role}</span></td>
+        <td>${(u.role||'user').split(',').map(r => `<span class="badge badge-${r.trim()}" style="margin-right:3px">${r.trim()}</span>`).join('')}</td>
         <td>${u.department || '\u2014'}</td>
         <td><span class="badge ${u.active ? 'badge-active' : 'badge-inactive'}">${u.active ? 'Aktiv' : 'Inaktiv'}</span></td>
         <td>
@@ -260,12 +260,10 @@ const Pages = {
             <input type="password" class="form-control" name="password" ${isEdit ? '' : 'required'} minlength="8" placeholder="Min. 8 Zeichen">
           </div>
           <div class="form-group">
-            <label class="form-label">Rolle</label>
-            <select class="form-control" name="role">
-              <option value="user" ${user?.role === 'user' ? 'selected' : ''}>User</option>
-              <option value="agent" ${user?.role === 'agent' ? 'selected' : ''}>Agent</option>
-              <option value="admin" ${user?.role === 'admin' ? 'selected' : ''}>Admin</option>
-            </select>
+            <label class="form-label">Rollen (kombinierbar)</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              ${this.renderRoleCheckboxes(user?.role || 'user')}
+            </div>
           </div>
         </div>
         <div class="form-row">
@@ -326,6 +324,13 @@ const Pages = {
       if (isEdit && !data.password) delete data.password;
       if (data.active !== undefined) data.active = data.active === '1';
       data.is_manager = data.is_manager === '1';
+
+      // Collect roles from checkboxes
+      const roles = ['admin','agent','disposition','assistenz','user']
+        .filter(r => data['role_' + r]);
+      data.role = roles.length > 0 ? roles.join(',') : 'user';
+      // Clean up role_ keys
+      ['admin','agent','disposition','assistenz','user'].forEach(r => delete data['role_' + r]);
 
       const btn = overlay.querySelector('[data-action="save"]');
       btn.disabled = true;
@@ -437,6 +442,23 @@ const Pages = {
   },
 
   // Utility: escape HTML
+  renderRoleCheckboxes(currentRole) {
+    const roles = (currentRole || 'user').split(',').map(s => s.trim());
+    const defs = [
+      ['admin', 'Admin', 'Vollzugriff, Systemkonfiguration'],
+      ['agent', 'Agent', 'Tickets bearbeiten, KB pflegen'],
+      ['disposition', 'Disposition', 'Tickets an Agents zuweisen'],
+      ['assistenz', 'Assistenz', 'Tickets f\u00FCr eigene Abteilung erstellen'],
+      ['user', 'User', 'Self-Service, eigene Tickets']
+    ];
+    return defs.map(([val, label, desc]) =>
+      '<label class="flex items-center gap-2 text-sm" style="cursor:pointer;padding:6px 8px;background:var(--color-bg-secondary);border-radius:var(--border-radius-sm)">' +
+      '<input type="checkbox" name="role_' + val + '" value="' + val + '"' + (roles.includes(val) ? ' checked' : '') + '>' +
+      '<div><div class="fw-600">' + label + '</div><div class="text-xs text-muted">' + desc + '</div></div>' +
+      '</label>'
+    ).join('');
+  },
+
   esc(str) {
     if (!str) return '';
     const el = document.createElement('span');

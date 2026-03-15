@@ -48,6 +48,9 @@ app.use(express.static(path.join(__dirname, '..', 'public'), {
 // Upload files
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
+// Setup wizard (no auth required, self-guarding)
+app.use('/api/setup', require('./routes/setup'));
+
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));

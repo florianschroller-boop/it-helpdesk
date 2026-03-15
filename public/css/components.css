@@ -318,6 +318,8 @@ select.form-control {
 .badge-active { background: #D1FAE5; color: #065F46; }
 .badge-inactive { background: #F3F4F6; color: #374151; }
 .badge-admin { background: #EDE9FE; color: #6D28D9; }
+.badge-disposition { background: #FEF3C7; color: #92400E; }
+.badge-assistenz { background: #DBEAFE; color: #1D4ED8; }
 .badge-agent { background: #DBEAFE; color: #1D4ED8; }
 .badge-user { background: #F3F4F6; color: #374151; }
 

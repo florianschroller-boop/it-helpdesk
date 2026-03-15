@@ -10,6 +10,8 @@ router.put('/', settingsController.update);
 router.post('/test-email', settingsController.testEmail);
 router.get('/email-logs', settingsController.getEmailLogs);
 router.post('/test-imap', settingsController.testImap);
+router.get('/ssl-status', settingsController.sslStatus);
+router.post('/ssl-setup', settingsController.sslSetup);
 
 // Logo upload
 const multer = require('multer');

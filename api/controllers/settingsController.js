@@ -192,4 +192,151 @@ async function testImap(req, res) {
   }
 }
 
-module.exports = { getAll, update, testEmail, getEmailLogs, testImap };
+// GET /api/settings/ssl-status — check nginx, certbot, current config
+async function sslStatus(req, res) {
+  const { execSync } = require('child_process');
+  const fs = require('fs');
+  const isLinux = process.platform === 'linux';
+
+  const status = {
+    platform: process.platform,
+    isLinux,
+    nginx: { installed: false, running: false, config_exists: false },
+    certbot: { installed: false },
+    domain: '',
+    ssl_active: false,
+    app_url: process.env.APP_URL || '',
+    app_port: process.env.APP_PORT || '3000'
+  };
+
+  if (!isLinux) {
+    return res.json({ success: true, data: { ...status, message: 'SSL-Setup über die Weboberfläche ist nur auf Linux verfügbar.' } });
+  }
+
+  try { execSync('which nginx', { stdio: 'pipe' }); status.nginx.installed = true; } catch {}
+  try { const r = execSync('systemctl is-active nginx', { stdio: 'pipe' }).toString().trim(); status.nginx.running = r === 'active'; } catch {}
+  try { execSync('which certbot', { stdio: 'pipe' }); status.certbot.installed = true; } catch {}
+
+  status.nginx.config_exists = fs.existsSync('/etc/nginx/sites-available/helpdesk');
+  if (status.nginx.config_exists) {
+    try {
+      const conf = fs.readFileSync('/etc/nginx/sites-available/helpdesk', 'utf8');
+      const domainMatch = conf.match(/server_name\s+([^;]+)/);
+      if (domainMatch) status.domain = domainMatch[1].trim();
+      status.ssl_active = conf.includes('ssl') || conf.includes('443');
+    } catch {}
+  }
+
+  // Extract domain from APP_URL
+  if (!status.domain && process.env.APP_URL) {
+    try { status.domain = new URL(process.env.APP_URL).hostname; } catch {}
+  }
+
+  res.json({ success: true, data: status });
+}
+
+// POST /api/settings/ssl-setup — configure nginx + certbot
+async function sslSetup(req, res) {
+  const { execSync } = require('child_process');
+  const fs = require('fs');
+  const path = require('path');
+
+  if (process.platform !== 'linux') {
+    return res.status(400).json({ success: false, error: 'Nur auf Linux-Servern verfügbar' });
+  }
+
+  const { action, domain, email } = req.body;
+  const port = process.env.APP_PORT || '3000';
+  const steps = [];
+
+  try {
+    if (action === 'install-nginx') {
+      execSync('apt-get update -qq && apt-get install -y -qq nginx', { stdio: 'pipe', timeout: 120000 });
+      execSync('systemctl enable nginx && systemctl start nginx', { stdio: 'pipe' });
+      steps.push('Nginx installiert und gestartet');
+    }
+
+    else if (action === 'install-certbot') {
+      execSync('apt-get install -y -qq certbot python3-certbot-nginx', { stdio: 'pipe', timeout: 120000 });
+      steps.push('Certbot installiert');
+    }
+
+    else if (action === 'configure-nginx') {
+      if (!domain) return res.status(400).json({ success: false, error: 'Domain erforderlich' });
+
+      const nginxConf = `server {
+    listen 80;
+    server_name ${domain};
+
+    client_max_body_size 20M;
+
+    location / {
+        proxy_pass http://127.0.0.1:${port};
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+`;
+      fs.writeFileSync('/etc/nginx/sites-available/helpdesk', nginxConf);
+      steps.push('Nginx-Konfiguration erstellt');
+
+      // Enable site
+      try { fs.unlinkSync('/etc/nginx/sites-enabled/helpdesk'); } catch {}
+      fs.symlinkSync('/etc/nginx/sites-available/helpdesk', '/etc/nginx/sites-enabled/helpdesk');
+      steps.push('Site aktiviert');
+
+      // Remove default if exists
+      try { fs.unlinkSync('/etc/nginx/sites-enabled/default'); } catch {}
+
+      // Test and reload
+      execSync('nginx -t', { stdio: 'pipe' });
+      execSync('systemctl reload nginx', { stdio: 'pipe' });
+      steps.push('Nginx neu geladen');
+
+      // Update .env
+      const envPath = path.resolve(__dirname, '..', '..', '.env');
+      if (fs.existsSync(envPath)) {
+        let env = fs.readFileSync(envPath, 'utf8');
+        env = env.replace(/APP_URL=.*/g, `APP_URL=http://${domain}`);
+        fs.writeFileSync(envPath, env);
+        steps.push('APP_URL aktualisiert');
+      }
+    }
+
+    else if (action === 'setup-ssl') {
+      if (!domain) return res.status(400).json({ success: false, error: 'Domain erforderlich' });
+      if (!email) return res.status(400).json({ success: false, error: 'E-Mail erforderlich' });
+
+      // Run certbot
+      const cmd = `certbot --nginx -d ${domain} --non-interactive --agree-tos --email ${email} --redirect`;
+      execSync(cmd, { stdio: 'pipe', timeout: 120000 });
+      steps.push('SSL-Zertifikat erstellt');
+      steps.push('HTTPS-Redirect konfiguriert');
+
+      // Update .env to https
+      const envPath = path.resolve(__dirname, '..', '..', '.env');
+      if (fs.existsSync(envPath)) {
+        let env = fs.readFileSync(envPath, 'utf8');
+        env = env.replace(/APP_URL=.*/g, `APP_URL=https://${domain}`);
+        fs.writeFileSync(envPath, env);
+        steps.push('APP_URL auf HTTPS aktualisiert');
+      }
+    }
+
+    else {
+      return res.status(400).json({ success: false, error: 'Unbekannte Aktion' });
+    }
+
+    res.json({ success: true, data: { steps } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message, data: { steps } });
+  }
+}
+
+module.exports = { getAll, update, testEmail, getEmailLogs, testImap, sslStatus, sslSetup };

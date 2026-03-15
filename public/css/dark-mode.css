@@ -54,6 +54,8 @@
 [data-theme="dark"] .badge-admin { background: rgba(139,92,246,0.2); color: #C4B5FD; }
 [data-theme="dark"] .badge-agent { background: rgba(59,130,246,0.2); color: #93C5FD; }
 [data-theme="dark"] .badge-user { background: rgba(107,114,128,0.2); color: #D1D5DB; }
+[data-theme="dark"] .badge-disposition { background: rgba(217,119,6,0.2); color: #FCD34D; }
+[data-theme="dark"] .badge-assistenz { background: rgba(59,130,246,0.2); color: #93C5FD; }
 
 [data-theme="dark"] .form-control {
   background-color: var(--color-bg);

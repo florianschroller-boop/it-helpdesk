@@ -23,15 +23,43 @@
 <h1>IT-Helpdesk v2.0</h1>
 <p class="subtitle">Installationsanleitung — Modulare Version mit Plugin-System</p>
 
+<div class="box box-success" style="margin-bottom:20px">
+  <strong>GitHub-Repository:</strong> <a href="https://github.com/florianschroller-boop/it-helpdesk" target="_blank">github.com/florianschroller-boop/it-helpdesk</a>
+</div>
+
 <div class="toc">
   <strong>Inhalt</strong>
+  <a href="#quickstart">Schnellstart (GitHub)</a>
   <a href="#architektur">1. Systemarchitektur</a>
   <a href="#voraussetzungen">2. Voraussetzungen</a>
-  <a href="#windows">3. Installation unter Windows</a>
-  <a href="#linux">4. Installation unter Linux</a>
-  <a href="#plugins">5. Plugins installieren</a>
-  <a href="#konfiguration">6. Erste Konfiguration</a>
-  <a href="#troubleshooting">7. Problembehandlung</a>
+  <a href="#github">3. Installation via GitHub</a>
+  <a href="#windows">4. Installation unter Windows</a>
+  <a href="#linux">5. Installation unter Linux</a>
+  <a href="#plugins">6. Plugins installieren</a>
+  <a href="#updates">7. Updates einspielen</a>
+  <a href="#konfiguration">8. Erste Konfiguration</a>
+  <a href="#troubleshooting">9. Problembehandlung</a>
+</div>
+
+<h2 id="quickstart">Schnellstart (GitHub)</h2>
+
+<h3>Linux / macOS — Ein Befehl</h3>
+<pre>curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/it-helpdesk/main/github-install.sh | bash</pre>
+
+<p>Mit Demo-Daten:</p>
+<pre>curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/it-helpdesk/main/github-install.sh | bash -s -- --demo</pre>
+
+<p>In ein bestimmtes Verzeichnis:</p>
+<pre>curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/it-helpdesk/main/github-install.sh | bash -s -- --dir /opt/helpdesk --demo</pre>
+
+<h3>Windows</h3>
+<pre>git clone https://github.com/florianschroller-boop/it-helpdesk.git
+cd it-helpdesk
+node install.js
+START.bat</pre>
+
+<div class="box">
+  <strong>Voraussetzung:</strong> Node.js (&ge; 18), MySQL/MariaDB und Git m&uuml;ssen installiert sein. Details siehe <a href="#voraussetzungen">Abschnitt 2</a>.
 </div>
 
 <h2 id="architektur">1. Systemarchitektur</h2>
@@ -71,15 +99,39 @@
   <tr><td>OS</td><td colspan="2">Windows 10/11, Server 2019+, CentOS 7+, Ubuntu 20+, Debian 11+</td></tr>
 </table>
 
-<h2 id="windows">3. Installation unter Windows</h2>
-<h3>3.1 Node.js</h3>
+<h2 id="github">3. Installation via GitHub</h2>
+
+<h3>3.1 Automatisch (empfohlen)</h3>
+<p>Der GitHub-Installer pr&uuml;ft Voraussetzungen, klont das Repository, installiert Pakete und startet den Setup-Assistenten:</p>
+<pre># Linux / macOS
+curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/it-helpdesk/main/github-install.sh | bash
+
+# Windows (Git erforderlich)
+git clone https://github.com/florianschroller-boop/it-helpdesk.git
+cd it-helpdesk
+node install.js</pre>
+
+<h3>3.2 Manuell</h3>
+<div style="counter-reset:step">
+  <div class="step"><p>Repository klonen:<br><code>git clone https://github.com/florianschroller-boop/it-helpdesk.git</code></p></div>
+  <div class="step"><p>In den Ordner wechseln:<br><code>cd it-helpdesk</code></p></div>
+  <div class="step"><p>Pakete installieren:<br><code>npm install --production</code></p></div>
+  <div class="step"><p>Setup-Assistent starten:<br><code>node install.js</code></p></div>
+</div>
+
+<div class="box">
+  <strong>Hinweis:</strong> Der Installer fragt Schritt f&uuml;r Schritt nach Datenbank-Zugangsdaten, Admin-Account und optionalen Demo-Daten. Jeder Schritt wartet auf Best&auml;tigung.
+</div>
+
+<h2 id="windows">4. Installation unter Windows</h2>
+<h3>4.1 Node.js</h3>
 <div style="counter-reset:step">
   <div class="step"><p><a href="https://nodejs.org/de/download">https://nodejs.org/de/download</a> öffnen</p></div>
   <div class="step"><p><strong>LTS-Version</strong> als .msi herunterladen und installieren</p></div>
   <div class="step"><p>Neues Terminal öffnen, prüfen: <code>node --version</code></p></div>
 </div>
 
-<h3>3.2 MySQL</h3>
+<h3>4.2 MySQL</h3>
 <table>
   <tr><th>Option</th><th>Für</th><th>Download</th></tr>
   <tr><td>XAMPP</td><td>Einfachste Option</td><td><a href="https://www.apachefriends.org/de/">apachefriends.org</a></td></tr>
@@ -87,17 +139,18 @@
   <tr><td>MariaDB</td><td>Produktion</td><td><a href="https://mariadb.org/download/">mariadb.org</a></td></tr>
 </table>
 
-<h3>3.3 Helpdesk installieren</h3>
+<h3>4.3 Helpdesk installieren</h3>
 <div style="counter-reset:step">
-  <div class="step"><p>ZIP entpacken nach z.B. <code>C:\IT-Helpdesk</code></p></div>
-  <div class="step"><p>Eingabeaufforderung öffnen: <code>cd C:\IT-Helpdesk</code></p></div>
+  <div class="step"><p>Git installieren: <a href="https://git-scm.com/download/win">git-scm.com</a></p></div>
+  <div class="step"><p>Eingabeaufforderung &ouml;ffnen:<br><code>git clone https://github.com/florianschroller-boop/it-helpdesk.git C:\IT-Helpdesk</code><br><code>cd C:\IT-Helpdesk</code></p></div>
+  <div class="step"><p>Pakete installieren: <code>npm install --production</code></p></div>
   <div class="step"><p>Installer starten: <code>node install.js</code></p></div>
   <div class="step"><p>Den 6 Schritten folgen (Datenbank, Admin, Demodaten)</p></div>
   <div class="step"><p><code>START.bat</code> doppelklicken</p></div>
   <div class="step"><p>Browser: <code>http://localhost:3000</code></p></div>
 </div>
 
-<h2 id="linux">4. Installation unter Linux</h2>
+<h2 id="linux">5. Installation unter Linux</h2>
 <h3>Node.js + MySQL installieren</h3>
 <p><strong>Ubuntu/Debian:</strong></p>
 <pre>curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
@@ -109,7 +162,14 @@ sudo yum install -y nodejs mariadb-server
 sudo systemctl start mariadb</pre>
 
 <h3>Helpdesk installieren</h3>
-<pre>unzip IT-Helpdesk-v2.0.zip && cd IT-Helpdesk
+<p><strong>Option A — Automatisch (ein Befehl):</strong></p>
+<pre>curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/it-helpdesk/main/github-install.sh | bash</pre>
+
+<p><strong>Option B — Manuell:</strong></p>
+<pre>cd /opt
+git clone https://github.com/florianschroller-boop/it-helpdesk.git helpdesk
+cd helpdesk
+npm install --production
 node install.js
 ./start.sh</pre>
 
@@ -129,7 +189,7 @@ WantedBy=multi-user.target
 EOF
 sudo systemctl enable --now helpdesk</pre>
 
-<h2 id="plugins">5. Plugins installieren</h2>
+<h2 id="plugins">6. Plugins installieren</h2>
 <div style="counter-reset:step">
   <div class="step"><p>Als Admin anmelden</p></div>
   <div class="step"><p>Administration → <strong>Plugins</strong></p></div>
@@ -145,7 +205,33 @@ sudo systemctl enable --now helpdesk</pre>
   <strong>Sichtbarkeit:</strong> Im Plugin-Manager können Admins festlegen, welche Plugins für Endbenutzer oder Agents sichtbar sind (Sidebar-Einträge). Die Plugin-Funktionen bleiben über direkte URLs erreichbar.
 </div>
 
-<h2 id="konfiguration">6. Erste Konfiguration</h2>
+<h2 id="updates">7. Updates einspielen</h2>
+
+<h3>Via GitHub (empfohlen)</h3>
+<pre>cd /opt/helpdesk    # oder Ihr Installationsverzeichnis
+git pull
+npm install --production</pre>
+<p>Dann Server neustarten (im Browser: Administration &rarr; Server neustarten, oder im Terminal).</p>
+
+<div class="box">
+  <strong>Was passiert beim Update:</strong>
+  <ul style="margin:8px 0 0 16px">
+    <li>Neue Dateien werden heruntergeladen, bestehende aktualisiert</li>
+    <li>Neue npm-Pakete werden installiert</li>
+    <li>Neue Datenbank-Migrationen werden beim n&auml;chsten Server-Start automatisch erkannt</li>
+    <li>Plugin-Daten und .env bleiben unber&uuml;hrt</li>
+  </ul>
+</div>
+
+<h3>Via Systemwartungs-Plugin</h3>
+<p>Falls das <strong>system-maintenance</strong> Plugin installiert ist:</p>
+<div style="counter-reset:step">
+  <div class="step"><p>Admin &rarr; Systemwartung &rarr; "Update einspielen"</p></div>
+  <div class="step"><p>Update-ZIP hochladen (erstellt automatisch ein Backup)</p></div>
+  <div class="step"><p>Server neustarten</p></div>
+</div>
+
+<h2 id="konfiguration">8. Erste Konfiguration</h2>
 <table>
   <tr><th>Was</th><th>Wo</th></tr>
   <tr><td>Firmenname, Logo, Farben</td><td>Administration → White-Label</td></tr>
@@ -158,7 +244,7 @@ sudo systemctl enable --now helpdesk</pre>
   <tr><td>Microsoft-Login</td><td>Einstellungen → Microsoft OAuth</td></tr>
 </table>
 
-<h2 id="troubleshooting">7. Problembehandlung</h2>
+<h2 id="troubleshooting">9. Problembehandlung</h2>
 
 <div class="box box-warn">
   <strong>"Cannot connect to database"</strong><br>

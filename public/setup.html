@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IT-Helpdesk — Setup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --primary: #4F46E5; --primary-hover: #4338CA; --bg: #F9FAFB; --surface: #FFFFFF; --border: #E5E7EB; --text: #111827; --text-sec: #6B7280; --text-ter: #9CA3AF; --success: #059669; --error: #DC2626; --radius: 8px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .wizard { width: 100%; max-width: 640px; }
+  .wizard-header { text-align: center; margin-bottom: 32px; }
+  .wizard-logo { width: 56px; height: 56px; background: var(--primary); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 24px; margin: 0 auto 16px; }
+  .wizard-title { font-size: 24px; font-weight: 700; }
+  .wizard-subtitle { color: var(--text-sec); font-size: 14px; margin-top: 4px; }
+
+  /* Steps */
+  .steps { display: flex; justify-content: center; gap: 8px; margin-bottom: 32px; }
+  .step-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); transition: all 0.3s; }
+  .step-dot.active { background: var(--primary); transform: scale(1.3); }
+  .step-dot.done { background: var(--success); }
+
+  /* Card */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 32px; margin-bottom: 16px; }
+  .card h2 { font-size: 18px; margin-bottom: 4px; }
+  .card .desc { color: var(--text-sec); font-size: 13px; margin-bottom: 20px; }
+
+  /* Form */
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 5px; }
+  .form-control { width: 100%; padding: 9px 12px; font-size: 14px; border: 1px solid var(--border); border-radius: var(--radius); outline: none; font-family: inherit; transition: border 0.2s; }
+  .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
+  .form-hint { font-size: 11px; color: var(--text-ter); margin-top: 3px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  textarea.form-control { resize: vertical; min-height: 60px; }
+  select.form-control { appearance: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236B7280' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E") no-repeat right 10px center/10px; padding-right: 28px; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 20px; font-size: 14px; font-weight: 500; border-radius: var(--radius); border: 1px solid transparent; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+  .btn-primary { background: var(--primary); color: white; } .btn-primary:hover { background: var(--primary-hover); }
+  .btn-secondary { background: white; color: var(--text); border-color: var(--border); } .btn-secondary:hover { background: var(--bg); }
+  .btn-ghost { background: none; color: var(--text-sec); border: none; } .btn-ghost:hover { color: var(--text); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .actions { display: flex; justify-content: space-between; margin-top: 24px; }
+
+  /* Color picker */
+  .color-row { display: flex; align-items: center; gap: 8px; }
+  .color-row input[type="color"] { width: 40px; height: 36px; border: none; cursor: pointer; border-radius: 4px; }
+
+  /* Presets */
+  .preset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .preset-btn { padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); background: white; cursor: pointer; font-size: 12px; text-align: left; transition: all 0.2s; }
+  .preset-btn:hover { border-color: var(--primary); background: #EEF2FF; }
+
+  /* Toast */
+  .toast { position: fixed; top: 16px; right: 16px; padding: 12px 16px; border-radius: var(--radius); font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 999; animation: slideIn 0.2s; }
+  .toast-success { background: #ECFDF5; border: 1px solid var(--success); color: #065F46; }
+  .toast-error { background: #FEF2F2; border: 1px solid var(--error); color: #991B1B; }
+  @keyframes slideIn { from { opacity:0; transform:translateX(100%); } to { opacity:1; transform:translateX(0); } }
+
+  /* Skip link */
+  .skip-link { text-align: center; margin-top: 12px; }
+  .skip-link a { color: var(--text-ter); font-size: 12px; text-decoration: none; } .skip-link a:hover { color: var(--text-sec); }
+
+  @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } .card { padding: 20px; } }
+</style>
+</head>
+<body>
+<div class="wizard" id="wizard"></div>
+
+<script>
+const Setup = {
+  currentStep: 0,
+  totalSteps: 6,
+  data: {},
+
+  async init() {
+    const res = await fetch('/api/setup/status').then(r => r.json());
+    if (!res.success || !res.data.needs_setup) {
+      window.location.href = '/';
+      return;
+    }
+    this.render();
+  },
+
+  render() {
+    const el = document.getElementById('wizard');
+    const steps = [this.stepWelcome, this.stepAdmin, this.stepCompany, this.stepOrganization, this.stepEmail, this.stepFinish];
+    el.innerHTML = `
+      <div class="wizard-header">
+        <div class="wizard-logo">H</div>
+        <div class="wizard-title">IT-Helpdesk einrichten</div>
+        <div class="wizard-subtitle">Schritt ${this.currentStep + 1} von ${this.totalSteps}</div>
+      </div>
+      <div class="steps">${Array.from({length: this.totalSteps}, (_, i) =>
+        `<div class="step-dot ${i === this.currentStep ? 'active' : i < this.currentStep ? 'done' : ''}"></div>`
+      ).join('')}</div>
+      <div id="stepContent"></div>
+    `;
+    steps[this.currentStep].call(this);
+  },
+
+  // ---- Step 0: Welcome ----
+  stepWelcome() {
+    document.getElementById('stepContent').innerHTML = `
+      <div class="card">
+        <h2>Willkommen!</h2>
+        <p class="desc">Richten Sie Ihr IT-Helpdesk in wenigen Schritten ein. Sie k\u00F6nnen jeden Schritt \u00FCberspringen und sp\u00E4ter in den Einstellungen anpassen.</p>
+        <div style="margin:20px 0">
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <div style="flex:1;min-width:200px;padding:12px;background:#F9FAFB;border-radius:8px;border:1px solid #E5E7EB">
+              <div style="font-weight:600;font-size:13px">1. Administrator</div>
+              <div style="font-size:12px;color:#6B7280">Ihren Admin-Account anlegen</div>
+            </div>
+            <div style="flex:1;min-width:200px;padding:12px;background:#F9FAFB;border-radius:8px;border:1px solid #E5E7EB">
+              <div style="font-weight:600;font-size:13px">2. Unternehmen</div>
+              <div style="font-size:12px;color:#6B7280">Name, Farben, Anrede</div>
+            </div>
+            <div style="flex:1;min-width:200px;padding:12px;background:#F9FAFB;border-radius:8px;border:1px solid #E5E7EB">
+              <div style="font-weight:600;font-size:13px">3. Organisation</div>
+              <div style="font-size:12px;color:#6B7280">Abteilungen, Kategorien</div>
+            </div>
+            <div style="flex:1;min-width:200px;padding:12px;background:#F9FAFB;border-radius:8px;border:1px solid #E5E7EB">
+              <div style="font-weight:600;font-size:13px">4. E-Mail</div>
+              <div style="font-size:12px;color:#6B7280">SMTP f\u00FCr Benachrichtigungen</div>
+            </div>
+          </div>
+        </div>
+        <div class="actions"><div></div><button class="btn btn-primary" onclick="Setup.next()">Einrichtung starten \u2192</button></div>
+      </div>
+    `;
+  },
+
+  // ---- Step 1: Admin ----
+  stepAdmin() {
+    document.getElementById('stepContent').innerHTML = `
+      <div class="card">
+        <h2>Administrator anlegen</h2>
+        <p class="desc">Erstellen Sie den ersten Admin-Account. Damit melden Sie sich nach dem Setup an.</p>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Vorname & Nachname *</label><input type="text" class="form-control" id="adminName" placeholder="Max Mustermann" required></div>
+          <div class="form-group"><label class="form-label">E-Mail *</label><input type="email" class="form-control" id="adminEmail" placeholder="admin@firma.de" required></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Passwort * (mind. 8 Zeichen)</label><input type="password" class="form-control" id="adminPass" minlength="8" required></div>
+          <div class="form-group"><label class="form-label">Telefon</label><input type="text" class="form-control" id="adminPhone" placeholder="Optional"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Abteilung</label><input type="text" class="form-control" id="adminDept" placeholder="z.B. IT" value="IT"></div>
+        <div id="adminError" style="color:#DC2626;font-size:13px;margin-top:8px"></div>
+        <div class="actions">
+          <button class="btn btn-ghost" onclick="Setup.prev()">\u2190 Zur\u00FCck</button>
+          <button class="btn btn-primary" onclick="Setup.saveAdmin()" id="adminBtn">Account erstellen \u2192</button>
+        </div>
+      </div>
+    `;
+  },
+
+  async saveAdmin() {
+    const name = document.getElementById('adminName').value.trim();
+    const email = document.getElementById('adminEmail').value.trim();
+    const password = document.getElementById('adminPass').value;
+    const phone = document.getElementById('adminPhone').value.trim();
+    const department = document.getElementById('adminDept').value.trim();
+
+    if (!name || !email || !password) { document.getElementById('adminError').textContent = 'Bitte alle Pflichtfelder ausf\u00FCllen'; return; }
+    if (password.length < 8) { document.getElementById('adminError').textContent = 'Passwort zu kurz'; return; }
+
+    const btn = document.getElementById('adminBtn');
+    btn.disabled = true;
+
+    const res = await fetch('/api/setup/admin', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name, email, password, phone, department}) }).then(r => r.json());
+
+    if (res.success) {
+      this.data.adminEmail = email;
+      this.data.adminPass = password;
+      this.data.inviteKey = res.data.inviteKey;
+      this.showToast('Admin erstellt!', 'success');
+      this.next();
+    } else {
+      document.getElementById('adminError').textContent = res.error;
+      btn.disabled = false;
+    }
+  },
+
+  // ---- Step 2: Company ----
+  stepCompany() {
+    document.getElementById('stepContent').innerHTML = `
+      <div class="card">
+        <h2>Unternehmen</h2>
+        <p class="desc">Passen Sie das Erscheinungsbild an Ihr Unternehmen an.</p>
+        <div class="form-group"><label class="form-label">Firmenname</label><input type="text" class="form-control" id="companyName" value="IT-Helpdesk" placeholder="Meine Firma GmbH"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Anrede</label>
+            <select class="form-control" id="companyFormality"><option value="sie" selected>Sie (formell)</option><option value="du">Du (informell)</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Akzentfarbe</label>
+            <div class="color-row"><input type="color" id="companyColor" value="#4F46E5"><input type="text" class="form-control" value="#4F46E5" style="max-width:100px" oninput="document.getElementById('companyColor').value=this.value"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="companyReg" checked>
+            Selbst-Registrierung f\u00FCr Benutzer aktivieren
+          </label>
+          <div class="form-hint">Benutzer k\u00F6nnen sich mit einem Einladungsschl\u00FCssel selbst registrieren</div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost" onclick="Setup.prev()">\u2190 Zur\u00FCck</button>
+          <div class="flex" style="display:flex;gap:8px">
+            <button class="btn btn-secondary" onclick="Setup.next()">Überspringen</button>
+            <button class="btn btn-primary" onclick="Setup.saveCompany()">Speichern & weiter \u2192</button>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  async saveCompany() {
+    const res = await fetch('/api/setup/company', { method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        company_name: document.getElementById('companyName').value,
+        formality: document.getElementById('companyFormality').value,
+        primary_color: document.getElementById('companyColor').value,
+        registration_enabled: document.getElementById('companyReg').checked
+      })
+    }).then(r => r.json());
+    if (res.success) { this.showToast('Gespeichert!', 'success'); this.next(); }
+    else this.showToast(res.error, 'error');
+  },
+
+  // ---- Step 3: Organization ----
+  stepOrganization() {
+    document.getElementById('stepContent').innerHTML = `
+      <div class="card">
+        <h2>Organisation</h2>
+        <p class="desc">Definieren Sie Abteilungen, Positionen und Ticket-Kategorien. Eine pro Zeile.</p>
+        <div class="form-group"><label class="form-label">Abteilungen</label>
+          <textarea class="form-control" id="orgDepts" rows="4">IT\nVertrieb\nMarketing\nBuchhaltung\nPersonal\nGesch\u00E4ftsf\u00FChrung</textarea>
+        </div>
+        <div class="form-group"><label class="form-label">Positionen / Jobtitel</label>
+          <textarea class="form-control" id="orgPositions" rows="3">Sachbearbeiter/in\nTeamleiter/in\nAbteilungsleiter/in\nGesch\u00E4ftsf\u00FChrer/in</textarea>
+        </div>
+        <div class="form-group"><label class="form-label">Ticket-Kategorien</label>
+          <textarea class="form-control" id="orgCategories" rows="4">Hardware\nSoftware\nNetzwerk\nZugang/Passwort\nBestellung\nSonstiges</textarea>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost" onclick="Setup.prev()">\u2190 Zur\u00FCck</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary" onclick="Setup.next()">\u00DCberspringen</button>
+            <button class="btn btn-primary" onclick="Setup.saveOrg()">Speichern & weiter \u2192</button>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  async saveOrg() {
+    const toArray = (id) => document.getElementById(id).value.split('\n').map(s => s.trim()).filter(Boolean);
+    const res = await fetch('/api/setup/organization', { method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ departments: toArray('orgDepts'), positions: toArray('orgPositions'), ticket_categories: toArray('orgCategories') })
+    }).then(r => r.json());
+    if (res.success) { this.showToast('Gespeichert!', 'success'); this.next(); }
+    else this.showToast(res.error, 'error');
+  },
+
+  // ---- Step 4: Email ----
+  stepEmail() {
+    const presets = [
+      { label: 'Microsoft 365', host: 'smtp.office365.com', port: 587 },
+      { label: 'Gmail', host: 'smtp.gmail.com', port: 587 },
+      { label: 'IONOS', host: 'smtp.ionos.de', port: 587 },
+      { label: 'Strato', host: 'smtp.strato.de', port: 465 },
+      { label: 'All-Inkl', host: 'smtp.all-inkl.com', port: 587 }
+    ];
+
+    document.getElementById('stepContent').innerHTML = `
+      <div class="card">
+        <h2>E-Mail (optional)</h2>
+        <p class="desc">SMTP f\u00FCr Ticket-Benachrichtigungen. Kann sp\u00E4ter in den Einstellungen konfiguriert werden.</p>
+        <div class="form-group">
+          <label class="form-label">Anbieter-Vorlage</label>
+          <div class="preset-grid">${presets.map(p =>
+            `<button class="preset-btn" onclick="document.getElementById('emailHost').value='${p.host}';document.getElementById('emailPort').value='${p.port}'">${p.label}<br><span style="color:#9CA3AF;font-size:11px">${p.host}</span></button>`
+          ).join('')}</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">SMTP-Host</label><input type="text" class="form-control" id="emailHost" placeholder="smtp.example.com"></div>
+          <div class="form-group"><label class="form-label">Port</label><input type="number" class="form-control" id="emailPort" value="587"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Benutzer</label><input type="text" class="form-control" id="emailUser" placeholder="helpdesk@firma.de"></div>
+          <div class="form-group"><label class="form-label">Passwort</label><input type="password" class="form-control" id="emailPass"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Absender-Adresse</label><input type="email" class="form-control" id="emailFrom" placeholder="helpdesk@firma.de"></div>
+          <div class="form-group"><label class="form-label">Absender-Name</label><input type="text" class="form-control" id="emailName" value="IT-Helpdesk"></div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost" onclick="Setup.prev()">\u2190 Zur\u00FCck</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary" onclick="Setup.next()">\u00DCberspringen</button>
+            <button class="btn btn-primary" onclick="Setup.saveEmail()">Speichern & weiter \u2192</button>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  async saveEmail() {
+    const res = await fetch('/api/setup/email', { method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        smtp_host: document.getElementById('emailHost').value, smtp_port: document.getElementById('emailPort').value,
+        smtp_user: document.getElementById('emailUser').value, smtp_pass: document.getElementById('emailPass').value,
+        mail_from_address: document.getElementById('emailFrom').value, mail_from_name: document.getElementById('emailName').value
+      })
+    }).then(r => r.json());
+    if (res.success) { this.showToast('E-Mail konfiguriert!', 'success'); this.next(); }
+    else this.showToast(res.error, 'error');
+  },
+
+  // ---- Step 5: Finish ----
+  stepFinish() {
+    document.getElementById('stepContent').innerHTML = `
+      <div class="card" style="text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">\u2705</div>
+        <h2>Setup abgeschlossen!</h2>
+        <p class="desc">Ihr IT-Helpdesk ist einsatzbereit.</p>
+
+        <div style="background:#F9FAFB;border-radius:8px;padding:16px;margin:20px 0;text-align:left">
+          <div style="font-size:13px;margin-bottom:8px"><strong>Login:</strong> ${this.data.adminEmail || 'Ihre E-Mail'}</div>
+          ${this.data.inviteKey ? `<div style="font-size:13px"><strong>Einladungsschl\u00FCssel:</strong> <code style="background:#E5E7EB;padding:2px 8px;border-radius:4px;font-size:15px;letter-spacing:1px">${this.data.inviteKey}</code></div>` : ''}
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:center;margin:20px 0">
+          <button class="btn btn-secondary" onclick="Setup.insertDemo()">Demo-Daten einf\u00FCgen</button>
+          <button class="btn btn-primary" onclick="Setup.finish()" id="finishBtn">Zum Login \u2192</button>
+        </div>
+      </div>
+    `;
+  },
+
+  async insertDemo() {
+    const res = await fetch('/api/setup/demo', { method: 'POST', headers: {'Content-Type':'application/json'} }).then(r => r.json());
+    if (res.success) this.showToast(res.message, 'success');
+    else this.showToast(res.error, 'error');
+  },
+
+  async finish() {
+    await fetch('/api/setup/complete', { method: 'POST', headers: {'Content-Type':'application/json'} });
+    window.location.href = '/';
+  },
+
+  // Navigation
+  next() { if (this.currentStep < this.totalSteps - 1) { this.currentStep++; this.render(); } },
+  prev() { if (this.currentStep > 0) { this.currentStep--; this.render(); } },
+
+  showToast(msg, type) {
+    const t = document.createElement('div');
+    t.className = 'toast toast-' + type;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+};
+
+Setup.init();
+</script>
+</body>
+</html>

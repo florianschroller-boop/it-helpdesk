@@ -26,10 +26,19 @@ async function list(req, res) {
     let where = ' WHERE 1=1';
     const params = [];
 
-    // Users can only see their own tickets
-    if (req.user.role === 'user') {
-      where += ' AND t.requester_id = ?';
-      params.push(req.user.id);
+    // Visibility based on roles:
+    // Admin/Agent: see all tickets
+    // Disposition: see all tickets (to assign them)
+    // Assistenz: see own tickets + tickets from own department
+    // User: see only own tickets
+    if (!req.user.isAgent && !req.user.isDisposition) {
+      if (req.user.isAssistenz && req.user.department) {
+        where += ' AND (t.requester_id = ? OR r.department = ?)';
+        params.push(req.user.id, req.user.department);
+      } else {
+        where += ' AND t.requester_id = ?';
+        params.push(req.user.id);
+      }
     }
 
     if (status) {
@@ -151,10 +160,21 @@ async function stats(req, res) {
 // POST /api/tickets
 async function create(req, res) {
   try {
-    const { title, description, category, priority, assignee_id, asset_id, source } = req.body;
+    const { title, description, category, priority, assignee_id, asset_id, source, on_behalf_of } = req.body;
 
     if (!title) {
       return res.status(400).json({ success: false, error: 'Titel ist erforderlich' });
+    }
+
+    // Assistenz: can create tickets on behalf of users in own department
+    let requesterId = req.user.id;
+    if (on_behalf_of && req.user.isAssistenz) {
+      const targetUser = await queryOne('SELECT id, department FROM users WHERE id = ? AND active = 1', [on_behalf_of]);
+      if (targetUser && targetUser.department === req.user.department) {
+        requesterId = targetUser.id;
+      } else {
+        return res.status(403).json({ success: false, error: 'Assistenz darf nur Tickets für die eigene Abteilung erstellen' });
+      }
     }
 
     const ticketNumber = await generateTicketNumber();
@@ -172,7 +192,7 @@ async function create(req, res) {
         description || '',
         category || 'Sonstiges',
         priority || 'medium',
-        req.user.id,
+        requesterId,
         assignee_id || null,
         asset_id || null,
         source || 'web',
@@ -272,9 +292,19 @@ async function update(req, res) {
       return res.status(404).json({ success: false, error: 'Ticket nicht gefunden' });
     }
 
-    // Users can only close/reopen their own tickets
-    if (req.user.role === 'user' && ticket.requester_id !== req.user.id) {
-      return res.status(403).json({ success: false, error: 'Keine Berechtigung' });
+    // Access control:
+    // - Admin/Agent: full access
+    // - Disposition: can change assignee_id on any ticket
+    // - Assistenz: can update tickets from own department
+    // - User: can only close/reopen own tickets
+    const isAgentOrAdmin = req.user.isAgent;
+    const isDisposition = req.user.isDisposition;
+    const isAssistenz = req.user.isAssistenz;
+
+    if (!isAgentOrAdmin && !isDisposition && !isAssistenz) {
+      if (ticket.requester_id !== req.user.id) {
+        return res.status(403).json({ success: false, error: 'Keine Berechtigung' });
+      }
     }
 
     const { title, description, status, priority, category, assignee_id, asset_id } = req.body;

@@ -22,6 +22,7 @@ const SettingsPage = {
         <div class="tab" data-tab="email" onclick="SettingsPage.switchTab('email')">E-Mail</div>
         <div class="tab" data-tab="tickets" onclick="SettingsPage.switchTab('tickets')">Tickets</div>
         <div class="tab" data-tab="mailhook" onclick="SettingsPage.switchTab('mailhook')">E-Mail-Webhook</div>
+        <div class="tab" data-tab="ssl" onclick="SettingsPage.switchTab('ssl')">SSL / HTTPS</div>
         <div class="tab" data-tab="org" onclick="SettingsPage.switchTab('org')">Organisation</div>
         <div class="tab" data-tab="oauth" onclick="SettingsPage.switchTab('oauth')">Microsoft OAuth</div>
       </div>
@@ -46,6 +47,9 @@ const SettingsPage = {
     switch (tab) {
       case 'general':
         content.innerHTML = this.renderGeneral(settings);
+        break;
+      case 'ssl':
+        content.innerHTML = await this.renderSSL();
         break;
       case 'email':
         content.innerHTML = this.renderEmail(settings);
@@ -421,6 +425,181 @@ const SettingsPage = {
         }
       });
     }
+  },
+
+  async renderSSL() {
+    const res = await API.get('/settings/ssl-status');
+    const s = res.success ? res.data : {};
+
+    if (!s.isLinux) {
+      return `
+        <div class="card" style="max-width:700px">
+          <div class="card-header"><h3 class="card-title">\u{1F512} SSL / HTTPS</h3></div>
+          <div class="card-body">
+            <p class="text-sm">Automatisches SSL-Setup ist nur auf <strong>Linux-Servern</strong> verf\u00FCgbar.</p>
+            <div class="card mt-4" style="background:var(--color-bg-secondary);border:1px solid var(--color-border)">
+              <div class="card-body text-sm">
+                <strong>Manuelle Einrichtung (Windows/andere):</strong>
+                <ol style="margin:8px 0 0 20px;line-height:2">
+                  <li>Einen Reverse-Proxy installieren (nginx, Apache, IIS)</li>
+                  <li>SSL-Zertifikat besorgen (Let's Encrypt, oder von der IT)</li>
+                  <li>Proxy so konfigurieren, dass HTTPS auf Port 443 auf <code>http://127.0.0.1:${s.app_port || 3000}</code> weiterleitet</li>
+                  <li>In der <code>.env</code> die <code>APP_URL</code> auf <code>https://...</code> \u00E4ndern</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    const nginxOk = s.nginx.installed && s.nginx.running;
+    const certbotOk = s.certbot.installed;
+
+    return `
+      <div class="card mb-4" style="max-width:700px">
+        <div class="card-header">
+          <h3 class="card-title">\u{1F512} SSL / HTTPS — Status</h3>
+          ${s.ssl_active ? '<span class="badge badge-active">\u{1F512} HTTPS aktiv</span>' : '<span class="badge badge-inactive">Kein SSL</span>'}
+        </div>
+        <div class="card-body">
+          <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+            <div class="stat-card" style="padding:12px">
+              <div class="stat-value text-sm">${s.nginx.installed ? (s.nginx.running ? '\u2705 L\u00E4uft' : '\u{1F7E1} Gestoppt') : '\u274C Fehlt'}</div>
+              <div class="stat-label">Nginx</div>
+            </div>
+            <div class="stat-card" style="padding:12px">
+              <div class="stat-value text-sm">${s.certbot.installed ? '\u2705 Installiert' : '\u274C Fehlt'}</div>
+              <div class="stat-label">Certbot</div>
+            </div>
+            <div class="stat-card" style="padding:12px">
+              <div class="stat-value text-sm">${s.ssl_active ? '\u2705 Aktiv' : '\u274C Inaktiv'}</div>
+              <div class="stat-label">SSL-Zertifikat</div>
+            </div>
+          </div>
+
+          <div class="text-sm mt-4">
+            <strong>Aktuelle URL:</strong> <code>${this.esc(s.app_url)}</code><br>
+            ${s.domain ? '<strong>Domain:</strong> <code>' + this.esc(s.domain) + '</code>' : ''}
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4" style="max-width:700px">
+        <div class="card-header"><h3 class="card-title">Einrichtungs-Assistent</h3></div>
+        <div class="card-body">
+          <div id="sslSteps">
+
+            <!-- Schritt 1: Nginx -->
+            <div class="ssl-step mb-4" style="padding:16px;background:var(--color-bg-secondary);border-radius:var(--border-radius);border-left:3px solid ${s.nginx.installed ? 'var(--color-success)' : 'var(--color-primary)'}">
+              <div class="flex items-center justify-between mb-2">
+                <span class="fw-600">Schritt 1: Nginx installieren</span>
+                ${s.nginx.installed ? '<span class="badge badge-active">\u2713 Erledigt</span>' : ''}
+              </div>
+              <p class="text-sm text-muted">Nginx dient als Reverse-Proxy und leitet HTTPS-Anfragen an das Helpdesk weiter.</p>
+              ${!s.nginx.installed ? '<button class="btn btn-primary btn-sm mt-2" onclick="SettingsPage.sslAction(\'install-nginx\')">Nginx installieren</button>' : ''}
+            </div>
+
+            <!-- Schritt 2: Certbot -->
+            <div class="ssl-step mb-4" style="padding:16px;background:var(--color-bg-secondary);border-radius:var(--border-radius);border-left:3px solid ${s.certbot.installed ? 'var(--color-success)' : 'var(--color-primary)'}">
+              <div class="flex items-center justify-between mb-2">
+                <span class="fw-600">Schritt 2: Certbot installieren</span>
+                ${s.certbot.installed ? '<span class="badge badge-active">\u2713 Erledigt</span>' : ''}
+              </div>
+              <p class="text-sm text-muted">Certbot erstellt kostenlose SSL-Zertifikate von Let's Encrypt.</p>
+              ${!s.certbot.installed ? '<button class="btn btn-primary btn-sm mt-2" onclick="SettingsPage.sslAction(\'install-certbot\')"' + (!s.nginx.installed ? ' disabled title="Zuerst Nginx installieren"' : '') + '>Certbot installieren</button>' : ''}
+            </div>
+
+            <!-- Schritt 3: Domain konfigurieren -->
+            <div class="ssl-step mb-4" style="padding:16px;background:var(--color-bg-secondary);border-radius:var(--border-radius);border-left:3px solid ${s.nginx.config_exists ? 'var(--color-success)' : 'var(--color-primary)'}">
+              <div class="flex items-center justify-between mb-2">
+                <span class="fw-600">Schritt 3: Domain konfigurieren</span>
+                ${s.nginx.config_exists ? '<span class="badge badge-active">\u2713 Konfiguriert</span>' : ''}
+              </div>
+              <p class="text-sm text-muted">Die Domain muss per DNS A-Record auf die IP dieses Servers zeigen.</p>
+              <div class="form-row mt-2">
+                <div class="form-group" style="margin-bottom:0">
+                  <input type="text" class="form-control" id="sslDomain" value="${this.esc(s.domain)}" placeholder="helpdesk.firma.de">
+                </div>
+                <div class="form-group" style="margin-bottom:0">
+                  <button class="btn btn-primary btn-sm" onclick="SettingsPage.sslAction('configure-nginx')"${!nginxOk ? ' disabled' : ''}>${s.nginx.config_exists ? 'Aktualisieren' : 'Nginx konfigurieren'}</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Schritt 4: SSL-Zertifikat -->
+            <div class="ssl-step mb-4" style="padding:16px;background:var(--color-bg-secondary);border-radius:var(--border-radius);border-left:3px solid ${s.ssl_active ? 'var(--color-success)' : 'var(--color-primary)'}">
+              <div class="flex items-center justify-between mb-2">
+                <span class="fw-600">Schritt 4: SSL-Zertifikat erstellen</span>
+                ${s.ssl_active ? '<span class="badge badge-active">\u{1F512} HTTPS aktiv</span>' : ''}
+              </div>
+              <p class="text-sm text-muted">Erstellt ein kostenloses SSL-Zertifikat von Let's Encrypt und aktiviert HTTPS.</p>
+              <div class="form-row mt-2">
+                <div class="form-group" style="margin-bottom:0">
+                  <input type="email" class="form-control" id="sslEmail" placeholder="admin@firma.de" value="${this.esc(App.user.email)}">
+                </div>
+                <div class="form-group" style="margin-bottom:0">
+                  <button class="btn btn-primary btn-sm" onclick="SettingsPage.sslAction('setup-ssl')"${!s.nginx.config_exists || !certbotOk ? ' disabled' : ''}>\u{1F512} SSL aktivieren</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="sslResult" class="mt-2"></div>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:700px">
+        <div class="card-header"><h3 class="card-title">Voraussetzungen</h3></div>
+        <div class="card-body text-sm">
+          <ul style="margin-left:16px;line-height:2">
+            <li><strong>Domain:</strong> Eine Domain (z.B. <code>helpdesk.firma.de</code>) muss per DNS A-Record auf die IP dieses Servers zeigen</li>
+            <li><strong>Port 80 + 443:</strong> M\u00FCssen vom Internet erreichbar sein (Firewall pr\u00FCfen)</li>
+            <li><strong>Root-Zugriff:</strong> Der Server-Prozess braucht Root-Rechte f\u00FCr Nginx/Certbot</li>
+            <li><strong>Zertifikat-Erneuerung:</strong> Let's Encrypt-Zertifikate laufen 90 Tage, Certbot erneuert sie automatisch per Cron</li>
+          </ul>
+        </div>
+      </div>
+    `;
+  },
+
+  async sslAction(action) {
+    const domain = document.getElementById('sslDomain')?.value?.trim();
+    const email = document.getElementById('sslEmail')?.value?.trim();
+    const resultDiv = document.getElementById('sslResult');
+
+    if ((action === 'configure-nginx' || action === 'setup-ssl') && !domain) {
+      Toast.error('Bitte Domain eingeben');
+      return;
+    }
+    if (action === 'setup-ssl' && !email) {
+      Toast.error('Bitte E-Mail-Adresse eingeben');
+      return;
+    }
+
+    const confirmMsg = {
+      'install-nginx': 'Nginx jetzt installieren?',
+      'install-certbot': 'Certbot jetzt installieren?',
+      'configure-nginx': `Nginx f\u00FCr Domain "${domain}" konfigurieren?`,
+      'setup-ssl': `SSL-Zertifikat f\u00FCr "${domain}" erstellen? Die Domain muss bereits auf diesen Server zeigen.`
+    };
+
+    Modal.confirm(confirmMsg[action] || 'Fortfahren?', async () => {
+      if (resultDiv) resultDiv.innerHTML = '<div class="text-sm text-muted" style="padding:8px">\u23F3 Wird ausgef\u00FChrt... (kann bis zu 2 Minuten dauern)</div>';
+
+      const res = await API.post('/settings/ssl-setup', { action, domain, email });
+
+      if (res.success) {
+        const steps = res.data?.steps || [];
+        if (resultDiv) resultDiv.innerHTML = `<div class="text-sm" style="color:var(--color-success);padding:8px">\u2713 ${steps.join('<br>\u2713 ')}</div>`;
+        Toast.success(steps[steps.length - 1] || 'Erfolgreich');
+
+        // Refresh status
+        setTimeout(() => this.switchTab('ssl'), 1500);
+      } else {
+        if (resultDiv) resultDiv.innerHTML = `<div class="text-sm text-error" style="padding:8px">\u2717 ${res.error}</div>`;
+        Toast.error(res.error);
+      }
+    });
   },
 
   renderOrg(s) {
