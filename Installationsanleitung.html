@@ -43,8 +43,16 @@
 
 <h2 id="quickstart">Schnellstart (GitHub)</h2>
 
-<h3>Linux / macOS — Ein Befehl</h3>
-<pre>curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/it-helpdesk/main/github-install.sh | bash</pre>
+<h3>Linux / macOS</h3>
+<pre># Auf frischen Systemen zuerst:
+apt update &amp;&amp; apt install -y curl dos2unix
+
+# Installation starten:
+curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/it-helpdesk/main/github-install.sh -o /tmp/install.sh
+dos2unix /tmp/install.sh
+bash /tmp/install.sh</pre>
+
+<p>Der Installer installiert automatisch alle Abh&auml;ngigkeiten (git, Node.js 20, MySQL) und f&uuml;hrt das Setup durch.</p>
 
 <p>Mit Demo-Daten:</p>
 <pre>curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/it-helpdesk/main/github-install.sh | bash -s -- --demo</pre>
@@ -162,8 +170,9 @@ sudo yum install -y nodejs mariadb-server
 sudo systemctl start mariadb</pre>
 
 <h3>Helpdesk installieren</h3>
-<p><strong>Option A — Automatisch (ein Befehl):</strong></p>
-<pre>curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/it-helpdesk/main/github-install.sh | bash</pre>
+<p><strong>Option A — Automatisch (installiert alle Abh&auml;ngigkeiten):</strong></p>
+<pre># Falls curl fehlt: apt update &amp;&amp; apt install -y curl
+curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/it-helpdesk/main/github-install.sh | bash</pre>
 
 <p><strong>Option B — Manuell:</strong></p>
 <pre>cd /opt

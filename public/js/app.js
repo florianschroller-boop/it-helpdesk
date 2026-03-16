@@ -13,7 +13,7 @@ const App = {
 
     // Check if first-run setup is needed
     const setupRes = await API.get('/setup/status');
-    if (setupRes.success && setupRes.data?.needs_setup) {
+    if (setupRes.success && (setupRes.data?.needs_setup || !setupRes.data?.setup_completed)) {
       window.location.href = '/setup.html';
       return;
     }

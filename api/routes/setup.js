@@ -10,16 +10,29 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { query, queryOne, insert } = require('../config/database');
 
-// Middleware: block setup if already completed
-async function setupGuard(req, res, next) {
+// Middleware: block admin creation if admin already exists
+async function adminGuard(req, res, next) {
   try {
     const admin = await queryOne("SELECT id FROM users WHERE role LIKE '%admin%' LIMIT 1");
     if (admin) {
+      return res.status(403).json({ success: false, error: 'Admin existiert bereits' });
+    }
+    next();
+  } catch {
+    next();
+  }
+}
+
+// Middleware: allow setup steps until setup is marked complete
+async function setupGuard(req, res, next) {
+  try {
+    const complete = await queryOne("SELECT value FROM settings WHERE key_name = 'setup_completed'");
+    if (complete && complete.value === 'true') {
       return res.status(403).json({ success: false, error: 'Setup bereits abgeschlossen' });
     }
     next();
   } catch {
-    next(); // Tables might not exist yet
+    next();
   }
 }
 
@@ -27,11 +40,14 @@ async function setupGuard(req, res, next) {
 router.get('/status', async (req, res) => {
   try {
     const admin = await queryOne("SELECT id FROM users WHERE role LIKE '%admin%' LIMIT 1");
+    const complete = await queryOne("SELECT value FROM settings WHERE key_name = 'setup_completed'");
     const settings = await queryOne("SELECT COUNT(*) as c FROM settings");
     res.json({
       success: true,
       data: {
         needs_setup: !admin,
+        setup_completed: complete?.value === 'true',
+        has_admin: !!admin,
         has_settings: settings?.c > 0,
         app_url: process.env.APP_URL || 'http://localhost:' + (process.env.APP_PORT || 3000)
       }
@@ -42,7 +58,7 @@ router.get('/status', async (req, res) => {
 });
 
 // POST /api/setup/admin — create first admin user
-router.post('/admin', setupGuard, async (req, res) => {
+router.post('/admin', adminGuard, async (req, res) => {
   try {
     const { name, email, password, phone, department } = req.body;
 
@@ -148,14 +164,14 @@ router.post('/email', setupGuard, async (req, res) => {
 // POST /api/setup/complete — finalize setup
 router.post('/complete', async (req, res) => {
   try {
-    // Ensure default settings exist
     const defaults = {
       'company_name': 'IT-Helpdesk',
       'sla_default_hours': '24',
-      'network_check_method': 'http'
+      'network_check_method': 'http',
+      'setup_completed': 'true'
     };
     for (const [k, v] of Object.entries(defaults)) {
-      await insert('INSERT INTO settings (key_name, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE key_name=key_name', [k, v]);
+      await insert('INSERT INTO settings (key_name, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?', [k, v, v]);
     }
 
     res.json({ success: true, message: 'Setup abgeschlossen! Sie können sich jetzt anmelden.' });

@@ -79,10 +79,16 @@ const Setup = {
 
   async init() {
     const res = await fetch('/api/setup/status').then(r => r.json());
-    if (!res.success || !res.data.needs_setup) {
-      window.location.href = '/';
-      return;
+    if (!res.success) { window.location.href = '/'; return; }
+
+    // If setup fully completed, go to login
+    if (res.data.setup_completed) { window.location.href = '/'; return; }
+
+    // If admin exists but setup not completed, skip to step 2 (company)
+    if (res.data.has_admin && !res.data.setup_completed) {
+      this.currentStep = 2;
     }
+
     this.render();
   },
 
