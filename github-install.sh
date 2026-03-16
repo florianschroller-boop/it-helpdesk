@@ -190,22 +190,60 @@ npm install --production --silent 2>&1
 echo "  ✓ npm-Pakete installiert"
 
 # ============================================
-# [4/5] Start-Script vorbereiten
+# [4/6] Konfiguration
 # ============================================
 echo ""
-echo "  [4/5] Start-Script..."
+echo "  [4/6] Konfiguration..."
 chmod +x start.sh 2>/dev/null || true
-echo "  ✓ start.sh bereit"
-
-# ============================================
-# [5/5] Konfiguration
-# ============================================
-echo ""
-echo "  [5/5] Konfiguration..."
 if [ -f ".env" ]; then
   echo "  .env existiert — uebersprungen"
 else
   node install.js
+fi
+
+# ============================================
+# [5/6] Systemdienst einrichten
+# ============================================
+echo ""
+echo "  [5/6] Systemdienst einrichten..."
+
+NODE_PATH=$(which node)
+
+cat > /etc/systemd/system/helpdesk.service << SVCEOF
+[Unit]
+Description=IT-Helpdesk
+After=network.target mysql.service mariadb.service
+
+[Service]
+Type=simple
+WorkingDirectory=$INSTALL_DIR
+ExecStart=$NODE_PATH $INSTALL_DIR/api/index.js
+Restart=always
+RestartSec=3
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+SVCEOF
+
+systemctl daemon-reload
+systemctl enable helpdesk 2>/dev/null
+echo "  ✓ Dienst 'helpdesk' eingerichtet (startet automatisch bei Boot)"
+
+# ============================================
+# [6/6] Server starten
+# ============================================
+echo ""
+echo "  [6/6] Server starten..."
+systemctl start helpdesk 2>/dev/null
+sleep 2
+
+# Pruefen ob er laeuft
+if systemctl is-active --quiet helpdesk; then
+  echo "  ✓ Server laeuft!"
+else
+  echo "  ⚠ Dienst konnte nicht gestartet werden — starte manuell:"
+  echo "    cd $INSTALL_DIR && ./start.sh"
 fi
 
 # IP-Adressen erkennen
@@ -218,9 +256,6 @@ echo "  ════════════════════════
 echo "  Installation abgeschlossen!"
 echo "  ══════════════════════════════════════════"
 echo ""
-echo "  Server starten:"
-echo "    cd $INSTALL_DIR && ./start.sh"
-echo ""
 echo "  Im Browser oeffnen:"
 for ip in $IPS; do
   echo "    →  http://$ip:$PORT"
@@ -229,5 +264,11 @@ echo ""
 echo "  Der Setup-Assistent im Browser fuehrt Sie"
 echo "  durch die weitere Einrichtung."
 echo ""
-echo "  Updates:  cd $INSTALL_DIR && git pull && npm install"
+echo "  Nuetzliche Befehle:"
+echo "    systemctl status helpdesk     Status pruefen"
+echo "    systemctl restart helpdesk    Neustart"
+echo "    journalctl -u helpdesk -f     Logs ansehen"
+echo ""
+echo "  Updates:"
+echo "    cd $INSTALL_DIR && git pull && npm install && systemctl restart helpdesk"
 echo ""
