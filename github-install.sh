@@ -1,23 +1,19 @@
 #!/bin/bash
 # ============================================
 # IT-Helpdesk — GitHub Installer
-# Installiert das System direkt von GitHub
 #
 # Nutzung:
-#   curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/t-helpdesk/main/github-install.sh | bash
-#
-# Oder mit Optionen:
-#   curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/t-helpdesk/main/github-install.sh | bash -s -- --demo --dir /opt/helpdesk
+#   curl -fsSL https://raw.githubusercontent.com/florianschroller-boop/it-helpdesk/main/github-install.sh | bash
+#   curl -fsSL ... | bash -s -- --demo --dir /opt/helpdesk
 # ============================================
 
 set -e
 
-# Defaults
 INSTALL_DIR="${HOME}/IT-Helpdesk"
 WITH_DEMO=false
 BRANCH="main"
+REPO="https://github.com/florianschroller-boop/it-helpdesk.git"
 
-# Parse args
 while [[ $# -gt 0 ]]; do
   case $1 in
     --demo) WITH_DEMO=true; shift ;;
@@ -33,89 +29,205 @@ echo "  ║  IT-Helpdesk — GitHub Installer          ║"
 echo "  ╚══════════════════════════════════════════╝"
 echo ""
 
-# ---- Check Node.js ----
-echo "  [1/4] Voraussetzungen pruefen..."
-if ! command -v node &>/dev/null; then
-  echo ""
-  echo "  ✗ Node.js nicht gefunden. Bitte installieren:"
-  echo ""
-  if [ -f /etc/debian_version ]; then
-    echo "    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -"
-    echo "    sudo apt-get install -y nodejs"
-  elif [ -f /etc/redhat-release ]; then
-    echo "    curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -"
-    echo "    sudo yum install -y nodejs"
-  elif [[ "$OSTYPE" == "darwin"* ]]; then
-    echo "    brew install node"
-  else
-    echo "    https://nodejs.org/de/download"
-  fi
-  echo ""
-  exit 1
+# Detect OS
+OS="unknown"
+PKG=""
+if [ -f /etc/debian_version ]; then
+  OS="debian"
+  PKG="apt-get"
+elif [ -f /etc/redhat-release ]; then
+  OS="rhel"
+  PKG="yum"
+  if command -v dnf &>/dev/null; then PKG="dnf"; fi
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+  OS="mac"
+  PKG="brew"
 fi
 
-NODE_MAJOR=$(node -v | cut -d. -f1 | tr -d 'v')
-if [ "$NODE_MAJOR" -lt 18 ]; then
-  echo "  ✗ Node.js $(node -v) ist zu alt (mind. v18)"
-  exit 1
-fi
-echo "  ✓ Node.js $(node -v)"
-
-if command -v git &>/dev/null; then
-  echo "  ✓ Git $(git --version | head -c 20)"
-else
-  echo "  ✗ Git nicht gefunden. Bitte installieren:"
-  echo "    Ubuntu: sudo apt-get install -y git"
-  echo "    CentOS: sudo yum install -y git"
-  exit 1
-fi
-
-# ---- Clone ----
+echo "  System: $OS"
 echo ""
-echo "  [2/4] Repository klonen..."
-if [ -d "$INSTALL_DIR" ]; then
-  echo "  Verzeichnis $INSTALL_DIR existiert bereits."
-  read -p "  Aktualisieren? (j/n) [j]: " UPDATE
-  UPDATE=${UPDATE:-j}
-  if [ "$UPDATE" = "j" ]; then
-    cd "$INSTALL_DIR"
-    git pull origin "$BRANCH" 2>/dev/null || git fetch && git reset --hard "origin/$BRANCH"
-    echo "  ✓ Aktualisiert"
+
+# ============================================
+# [1/5] System-Abhaengigkeiten
+# ============================================
+echo "  [1/5] System-Abhaengigkeiten pruefen & installieren..."
+echo ""
+
+# ---- curl ----
+if ! command -v curl &>/dev/null; then
+  echo "  → curl installieren..."
+  if [ "$PKG" = "apt-get" ]; then apt-get update -qq && apt-get install -y -qq curl; fi
+  if [ "$PKG" = "yum" ] || [ "$PKG" = "dnf" ]; then $PKG install -y -q curl; fi
+  echo "  ✓ curl installiert"
+fi
+
+# ---- git ----
+if ! command -v git &>/dev/null; then
+  echo "  → git installieren..."
+  if [ "$PKG" = "apt-get" ]; then apt-get update -qq && apt-get install -y -qq git; fi
+  if [ "$PKG" = "yum" ] || [ "$PKG" = "dnf" ]; then $PKG install -y -q git; fi
+  if [ "$PKG" = "brew" ]; then brew install git; fi
+  if command -v git &>/dev/null; then
+    echo "  ✓ git installiert"
+  else
+    echo "  ✗ git konnte nicht installiert werden"
+    exit 1
   fi
 else
-  git clone --depth 1 --branch "$BRANCH" "https://github.com/florianschroller-boop/t-helpdesk.git" "$INSTALL_DIR"
+  echo "  ✓ git vorhanden"
+fi
+
+# ---- Node.js ----
+NEED_NODE=false
+if ! command -v node &>/dev/null; then
+  NEED_NODE=true
+else
+  NODE_MAJOR=$(node -v | cut -d. -f1 | tr -d 'v')
+  if [ "$NODE_MAJOR" -lt 18 ]; then
+    echo "  ⚠ Node.js $(node -v) zu alt (mind. v18)"
+    NEED_NODE=true
+  fi
+fi
+
+if [ "$NEED_NODE" = true ]; then
+  echo "  → Node.js 20 installieren..."
+  if [ "$OS" = "debian" ]; then
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - >/dev/null 2>&1
+    apt-get install -y -qq nodejs
+  elif [ "$OS" = "rhel" ]; then
+    curl -fsSL https://rpm.nodesource.com/setup_20.x | bash - >/dev/null 2>&1
+    $PKG install -y -q nodejs
+  elif [ "$OS" = "mac" ]; then
+    brew install node
+  else
+    echo "  ✗ Automatische Node.js-Installation nicht moeglich."
+    echo "    Bitte manuell installieren: https://nodejs.org/"
+    exit 1
+  fi
+
+  if command -v node &>/dev/null; then
+    echo "  ✓ Node.js $(node -v) installiert"
+  else
+    echo "  ✗ Node.js-Installation fehlgeschlagen"
+    exit 1
+  fi
+else
+  echo "  ✓ Node.js $(node -v)"
+fi
+
+# ---- MySQL/MariaDB ----
+if command -v mysql &>/dev/null || command -v mariadb &>/dev/null; then
+  echo "  ✓ MySQL/MariaDB vorhanden"
+else
+  echo ""
+  echo "  ⚠ MySQL/MariaDB nicht gefunden."
+  echo ""
+  read -p "  MySQL/MariaDB jetzt installieren? (j/n) [j]: " INSTALL_DB
+  INSTALL_DB=${INSTALL_DB:-j}
+
+  if [ "$INSTALL_DB" = "j" ]; then
+    echo "  → Datenbank installieren..."
+    if [ "$OS" = "debian" ]; then
+      apt-get update -qq && apt-get install -y -qq mysql-server
+      systemctl start mysql 2>/dev/null || service mysql start 2>/dev/null
+      systemctl enable mysql 2>/dev/null || true
+    elif [ "$OS" = "rhel" ]; then
+      $PKG install -y -q mariadb-server mariadb
+      systemctl start mariadb
+      systemctl enable mariadb
+    elif [ "$OS" = "mac" ]; then
+      brew install mysql && brew services start mysql
+    fi
+    echo "  ✓ Datenbank installiert und gestartet"
+
+    # Create helpdesk user
+    echo ""
+    echo "  Datenbank-Benutzer fuer das Helpdesk anlegen..."
+    read -p "  MySQL Root-Passwort (leer falls keins gesetzt): " MYSQL_ROOT_PASS
+    read -p "  Helpdesk DB-Passwort [helpdesk123]: " HD_PASS
+    HD_PASS=${HD_PASS:-helpdesk123}
+
+    MYSQL_CMD="mysql"
+    if [ -n "$MYSQL_ROOT_PASS" ]; then MYSQL_CMD="mysql -p$MYSQL_ROOT_PASS"; fi
+
+    $MYSQL_CMD -e "CREATE DATABASE IF NOT EXISTS helpdesk CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null || \
+      sudo mysql -e "CREATE DATABASE IF NOT EXISTS helpdesk CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null
+
+    $MYSQL_CMD -e "CREATE USER IF NOT EXISTS 'helpdesk'@'localhost' IDENTIFIED BY '$HD_PASS'; GRANT ALL PRIVILEGES ON helpdesk.* TO 'helpdesk'@'localhost'; FLUSH PRIVILEGES;" 2>/dev/null || \
+      sudo mysql -e "CREATE USER IF NOT EXISTS 'helpdesk'@'localhost' IDENTIFIED BY '$HD_PASS'; GRANT ALL PRIVILEGES ON helpdesk.* TO 'helpdesk'@'localhost'; FLUSH PRIVILEGES;" 2>/dev/null
+
+    echo "  ✓ Datenbank 'helpdesk' und Benutzer 'helpdesk' erstellt"
+    echo "  ✓ Passwort: $HD_PASS"
+  else
+    echo "  OK — stellen Sie sicher, dass ein MySQL/MariaDB-Server erreichbar ist."
+  fi
+fi
+
+echo ""
+
+# ============================================
+# [2/5] Repository klonen
+# ============================================
+echo "  [2/5] Repository klonen..."
+if [ -d "$INSTALL_DIR/.git" ]; then
+  echo "  Verzeichnis existiert — aktualisiere..."
+  cd "$INSTALL_DIR"
+  git pull origin "$BRANCH" 2>/dev/null || (git fetch && git reset --hard "origin/$BRANCH")
+  echo "  ✓ Aktualisiert"
+else
+  git clone --depth 1 --branch "$BRANCH" "$REPO" "$INSTALL_DIR"
   echo "  ✓ Geklont nach $INSTALL_DIR"
 fi
 
 cd "$INSTALL_DIR"
 
-# ---- npm install ----
+# ============================================
+# [3/5] npm install
+# ============================================
 echo ""
-echo "  [3/4] Abhaengigkeiten installieren..."
+echo "  [3/5] Node.js-Pakete installieren..."
 npm install --production --silent 2>&1
 echo "  ✓ npm-Pakete installiert"
 
-# ---- Setup ----
+# ============================================
+# [4/5] Start-Script vorbereiten
+# ============================================
 echo ""
-echo "  [4/4] Konfiguration..."
+echo "  [4/5] Start-Script..."
+chmod +x start.sh 2>/dev/null || true
+echo "  ✓ start.sh bereit"
+
+# ============================================
+# [5/5] Konfiguration
+# ============================================
+echo ""
+echo "  [5/5] Konfiguration..."
 if [ -f ".env" ]; then
-  echo "  .env existiert bereits — uebersprungen"
+  echo "  .env existiert — uebersprungen"
 else
-  if [ "$WITH_DEMO" = true ]; then
-    node install.js --demo
-  else
-    node install.js
-  fi
+  node install.js
 fi
+
+# IP-Adressen erkennen
+IPS=$(hostname -I 2>/dev/null | tr ' ' '\n' | grep -v '^$' | head -3)
+PORT=$(grep APP_PORT .env 2>/dev/null | cut -d= -f2 || echo "3000")
+PORT=${PORT:-3000}
 
 echo ""
 echo "  ══════════════════════════════════════════"
 echo "  Installation abgeschlossen!"
 echo "  ══════════════════════════════════════════"
 echo ""
-echo "  Verzeichnis:  $INSTALL_DIR"
-echo "  Starten:      cd $INSTALL_DIR && node api/index.js"
-echo "  Oder:         cd $INSTALL_DIR && ./start.sh"
+echo "  Server starten:"
+echo "    cd $INSTALL_DIR && ./start.sh"
 echo ""
-echo "  Updates:      cd $INSTALL_DIR && git pull && npm install"
+echo "  Im Browser oeffnen:"
+for ip in $IPS; do
+  echo "    →  http://$ip:$PORT"
+done
+echo ""
+echo "  Der Setup-Assistent im Browser fuehrt Sie"
+echo "  durch die weitere Einrichtung."
+echo ""
+echo "  Updates:  cd $INSTALL_DIR && git pull && npm install"
 echo ""
